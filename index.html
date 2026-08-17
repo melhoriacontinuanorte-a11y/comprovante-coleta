@@ -327,6 +327,12 @@
                     const payload = { title: `Comprovante de Coleta ${dadosAtuais.coleta.numero}`, text: mensagem, files: [arquivo] };
 
                     if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [arquivo] }))) {
+                        const copiou = await copiarTexto(mensagem);
+                        if (copiou) {
+                            alert('Mensagem da coleta copiada! No WhatsApp, toque em "Adicione uma legenda..." e escolha COLAR. Em seguida, envie o PDF.');
+                        } else {
+                            alert('O PDF será compartilhado. No WhatsApp, se a legenda não vier preenchida, copie a mensagem manualmente.');
+                        }
                         await navigator.share(payload);
                     } else {
                         baixarBlob(blob, filename);
@@ -428,7 +434,27 @@
         }
 
         async function copiarTexto(texto) {
-            try { await navigator.clipboard.writeText(texto); } catch (_) {}
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(texto);
+                    return true;
+                }
+
+                const area = document.createElement('textarea');
+                area.value = texto;
+                area.setAttribute('readonly', '');
+                area.style.position = 'fixed';
+                area.style.opacity = '0';
+                area.style.pointerEvents = 'none';
+                document.body.appendChild(area);
+                area.select();
+                area.setSelectionRange(0, area.value.length);
+                const ok = document.execCommand('copy');
+                area.remove();
+                return ok;
+            } catch (_) {
+                return false;
+            }
         }
 
         function abrirWhatsAppTexto(telefone, mensagem) {

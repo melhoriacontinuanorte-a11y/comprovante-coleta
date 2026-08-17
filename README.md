@@ -36,3 +36,8 @@ Também existe um botão **INSTALAR APP** dentro da página quando a instalaçã
 ## Observação
 
 A instalação PWA e o compartilhamento nativo precisam de HTTPS. O GitHub Pages fornece HTTPS.
+
+
+## WhatsApp no Android
+
+Ao tocar em **COMPARTILHAR**, a mensagem da coleta é copiada automaticamente. No WhatsApp, toque em **Adicione uma legenda...** e escolha **Colar** antes de enviar o PDF.
