@@ -1,0 +1,22 @@
+COMPROVANTE DE COLETA - PWA
+
+Arquivos principais:
+- index.html
+- manifest.webmanifest
+- sw.js
+- icon-192.png / icon-512.png
+- logo-alterosa.png
+
+IMPORTANTE:
+Para instalar como aplicativo e usar o compartilhamento nativo de PDF no Android, publique esta pasta em um endereço HTTPS.
+Abrir index.html diretamente (file://) serve para teste, mas instalação/service worker/compartilhamento de arquivo podem não funcionar.
+
+Fluxo no tablet:
+1. Copiar o texto no aplicativo de coleta.
+2. Abrir o PWA.
+3. Colar e tocar em GERAR COMPROVANTE.
+4. Tocar em COMPARTILHAR.
+5. Escolher WhatsApp e o destinatário. O PDF e a mensagem são enviados para o compartilhamento do Android.
+
+Fallback:
+Se o navegador não aceitar compartilhamento de arquivo, o app baixa o PDF, copia a mensagem e abre o WhatsApp com o texto preenchido.

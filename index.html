@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprovante de Coleta - Alterosa Pneus</title>
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <!-- Bibliotecas usadas na geração do PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <style>
+        /* ==========================================================================
+           RESET E VARIÁVEIS GERAIS
+           ========================================================================== */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', 'Helvetica', sans-serif; }
+        :root {
+            --bg-color: #f4f7f6; --primary-color: #2c3e50; --secondary-color: #34495e;
+            --accent-color: #3498db; --success-color: #27ae60; --text-color: #333; --border-color: #ccc;
+        }
+        body { background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; }
+
+        /* ==========================================================================
+           ESTILOS DA INTERFACE (TELA)
+           ========================================================================== */
+        #app-container {
+            max-width: 900px; margin: 40px auto; padding: 30px;
+            background: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 { color: var(--primary-color); text-align: center; margin-bottom: 10px; }
+        .instrucao { text-align: center; color: #666; margin-bottom: 20px; font-size: 15px; }
+        textarea {
+            width: 100%; height: 200px; padding: 15px; border: 1px solid var(--border-color);
+            border-radius: 5px; font-family: monospace; font-size: 14px; resize: vertical;
+            margin-bottom: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .botoes-acao { display: flex; gap: 15px; justify-content: center; margin-bottom: 30px; }
+        button {
+            padding: 12px 25px; font-size: 16px; font-weight: bold; color: #fff;
+            border: none; border-radius: 5px; cursor: pointer; transition: background 0.3s, transform 0.1s;
+        }
+        button:active { transform: scale(0.98); }
+        #btn-gerar { background-color: var(--accent-color); }
+        #btn-gerar:hover { background-color: #2980b9; }
+        #btn-limpar { background-color: #95a5a6; }
+        #btn-limpar:hover { background-color: #7f8c8d; }
+
+        #acoes-resultado {
+            display: none; justify-content: center; gap: 15px; margin: 20px 0 30px 0;
+            padding-top: 20px; border-top: 1px solid var(--border-color);
+        }
+        #btn-imprimir { background-color: var(--secondary-color); }
+        #btn-imprimir:hover { background-color: #1a252f; }
+        #btn-baixar-pdf { background-color: var(--success-color); }
+        #btn-baixar-pdf:hover { background-color: #219150; }
+        #btn-compartilhar { background-color: #16a085; }
+        #btn-compartilhar:hover { background-color: #138d75; }
+        #btn-instalar { background-color: #8e44ad; display: none; }
+        #btn-instalar:hover { background-color: #7d3c98; }
+        #pwa-status { margin: -5px 0 20px; padding: 10px 12px; border-radius: 5px; background: #fff8e1; color: #7a5d00; font-size: 13px; display: none; }
+        #install-banner {
+            display: none; align-items: center; justify-content: space-between; gap: 16px;
+            margin: 0 0 20px; padding: 14px 16px; border: 1px solid #d8c7e6;
+            border-radius: 8px; background: #f7f0fc; color: #4a235a;
+        }
+        #install-banner .install-text { flex: 1; }
+        #install-banner .install-text strong { display: block; margin-bottom: 2px; font-size: 15px; }
+        #install-banner .install-text span { font-size: 13px; color: #6c4a78; }
+        #install-banner .install-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        #install-banner button { padding: 9px 14px; font-size: 13px; flex: 0 0 auto; }
+        #btn-instalar-banner { background-color: #8e44ad; }
+        #btn-instalar-banner:hover { background-color: #7d3c98; }
+        #btn-agora-nao { background-color: #95a5a6; }
+        #btn-agora-nao:hover { background-color: #7f8c8d; }
+
+        @media (max-width: 700px) {
+            #app-container { margin: 0; padding: 16px; border-radius: 0; }
+            .botoes-acao, #acoes-resultado { flex-wrap: wrap; }
+            button { flex: 1 1 220px; }
+            #preview-wrapper { padding: 8px; }
+        }
+
+        #feedback-container {
+            display: none; background: #e8f8f5; border-left: 5px solid var(--success-color);
+            padding: 15px; margin-bottom: 20px; border-radius: 4px;
+        }
+        #feedback-container h3 { color: var(--success-color); margin-bottom: 10px; }
+        #feedback-container ul { list-style: none; margin-left: 10px; }
+        .aviso { color: #d35400; font-weight: bold; margin-top: 10px; }
+
+        /* ==========================================================================
+           CONTROLE ESTRITO DE DIMENSÃO (RESOLVE CORTE EM TABLETS)
+           ========================================================================== */
+        #preview-wrapper {
+            display: none; 
+            border: 2px dashed var(--border-color); 
+            padding: 20px;
+            background: #e9ecef; 
+            border-radius: 8px; 
+            overflow-x: auto; /* Permite rolar lateralmente no tablet sem comprimir o documento */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #documento-final {
+            background: #fff; 
+            /* TRAVA DE LARGURA: 794px equivale a 210mm exatos a 96dpi. */
+            width: 760px; 
+            min-width: 760px;
+            max-width: 760px;
+            margin: 0 auto; 
+            color: #000; 
+            padding: 20px; /* Margem interna segura para tela e PDF */
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .secao-titulo { font-size: 12px; font-weight: bold; background: #eee; border: 1px solid #000; padding: 4px 8px; margin-bottom: -1px; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px; word-break: break-word; table-layout: fixed; }
+        table, th, td { border: 1px solid #000; }
+        th { background-color: #f5f5f5; padding: 4px; text-align: left; font-size: 10px; color: #333; }
+        td { padding: 4px 6px; vertical-align: top; }
+        .info-table th { border-bottom: none; }
+        .info-table td { border-top: none; font-weight: bold; }
+
+        .pneus-table th { text-align: center; background-color: #e0e0e0; font-weight: bold; font-size: 11px; }
+        .pneus-table td { text-align: center; }
+        .pneus-table td.text-left { text-align: left; }
+        .pneus-table thead { display: table-header-group; }
+        .pneus-table tr { page-break-inside: avoid; break-inside: avoid; }
+        .pneus-table td, .pneus-table th { overflow-wrap: anywhere; word-break: break-word; }
+        .secao-titulo, .info-table, .obs-box, .assinaturas { page-break-inside: avoid; break-inside: avoid; }
+        .pneus-table { page-break-inside: auto; break-inside: auto; }
+        .pneus-table thead { display: table-header-group; }
+        .pneus-table tfoot { display: table-footer-group; }
+        .total-pneus { text-align: right; font-weight: bold; font-size: 14px; margin-bottom: 20px; }
+        .obs-box { border: 1px solid #000; padding: 8px; min-height: 60px; margin-bottom: 30px; font-size: 11px; }
+        .assinaturas { display: flex; justify-content: space-around; margin-top: 50px; page-break-inside: avoid; }
+        .assinatura-box { text-align: center; width: 40%; font-size: 12px; }
+        .linha-assinatura { border-top: 1px solid #000; margin-bottom: 5px; }
+
+        /* ==========================================================================
+           CONFIGURAÇÕES DE IMPRESSÃO NATIVA DO NAVEGADOR
+           ========================================================================== */
+        @media print {
+            @page { size: A4 portrait; margin: 10mm; }
+            body { background: #fff; margin: 0; padding: 0; }
+            #app-container, #feedback-container, .botoes-acao, #acoes-resultado, h1, .instrucao { display: none !important; }
+            #preview-wrapper { display: block; border: none; padding: 0; background: #fff; overflow: visible; }
+            #documento-final { width: 100%; max-width: none; min-width: auto; padding: 0; box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <h1>Gerador de Comprovante de Coleta</h1>
+        <p class="instrucao">Cole abaixo o texto bruto do comprovante. O sistema extrai os dados, gera o PDF e permite compartilhar o comprovante pelo menu nativo do tablet.</p>
+        <div id="pwa-status"></div>
+        
+        <textarea id="texto-entrada" placeholder="Cole o conteúdo bruto aqui..."></textarea>
+        
+        <div class="botoes-acao">
+            <button id="btn-limpar">LIMPAR</button>
+            <button id="btn-gerar">GERAR COMPROVANTE</button>
+            <button id="btn-instalar">📲 INSTALAR APP</button>
+        </div>
+
+        <div id="feedback-container"></div>
+        
+        <div id="acoes-resultado">
+            <button id="btn-imprimir">🖨️ IMPRIMIR</button>
+            <button id="btn-baixar-pdf">📄 BAIXAR PDF</button>
+            <button id="btn-compartilhar">📤 COMPARTILHAR</button>
+        </div>
+
+        <div id="preview-wrapper">
+            <div id="documento-final"></div>
+        </div>
+    </div>
+
+    <script>
+        let numeroColetaAtual = "comprovante"; 
+
+        let dadosAtuais = null;
+        let deferredInstallPrompt = null;
+
+        function atualizarOfertaInstalacao(disponivel) {
+            const btn = document.getElementById('btn-instalar');
+            const banner = document.getElementById('install-banner');
+
+            if (btn) btn.style.display = disponivel ? 'inline-block' : 'none';
+
+            const dispensado = sessionStorage.getItem('installBannerDispensado') === '1';
+            if (banner) banner.style.display = (disponivel && !dispensado) ? 'flex' : 'none';
+        }
+
+        async function solicitarInstalacao() {
+            if (!deferredInstallPrompt) {
+                alert('A instalação ainda não está disponível. Abra o endereço publicado pelo Chrome no tablet e tente novamente.');
+                return;
+            }
+
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice;
+            deferredInstallPrompt = null;
+            atualizarOfertaInstalacao(false);
+        }
+
+        window.addEventListener('beforeinstallprompt', (event) => {
+            event.preventDefault();
+            deferredInstallPrompt = event;
+            atualizarOfertaInstalacao(true);
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+            atualizarOfertaInstalacao(false);
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnGerar = document.getElementById('btn-gerar');
+            const btnLimpar = document.getElementById('btn-limpar');
+            const btnImprimir = document.getElementById('btn-imprimir');
+            const btnBaixarPDF = document.getElementById('btn-baixar-pdf');
+            const btnCompartilhar = document.getElementById('btn-compartilhar');
+            const btnInstalar = document.getElementById('btn-instalar');
+            const btnInstalarBanner = document.getElementById('btn-instalar-banner');
+            const btnAgoraNao = document.getElementById('btn-agora-nao');
+            const installBanner = document.getElementById('install-banner');
+            const textoEntrada = document.getElementById('texto-entrada');
+            const feedbackContainer = document.getElementById('feedback-container');
+            const docFinal = document.getElementById('documento-final');
+            const previewWrapper = document.getElementById('preview-wrapper');
+            const acoesResultado = document.getElementById('acoes-resultado');
+            const pwaStatus = document.getElementById('pwa-status');
+
+            if (location.protocol === 'file:') {
+                pwaStatus.textContent = 'Para instalar o app e compartilhar o PDF diretamente, publique esta pasta em HTTPS. Abrir o arquivo diretamente ainda permite testar geração e download.';
+                pwaStatus.style.display = 'block';
+            } else if (!window.isSecureContext) {
+                pwaStatus.textContent = 'O compartilhamento de arquivos requer conexão HTTPS.';
+                pwaStatus.style.display = 'block';
+            }
+
+            if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Service Worker:', err));
+            }
+
+            btnInstalar.addEventListener('click', solicitarInstalacao);
+
+            if (btnInstalarBanner) {
+                btnInstalarBanner.addEventListener('click', solicitarInstalacao);
+            }
+
+            if (btnAgoraNao) {
+                btnAgoraNao.addEventListener('click', () => {
+                    sessionStorage.setItem('installBannerDispensado', '1');
+                    if (installBanner) installBanner.style.display = 'none';
+                });
+            }
+
+            btnLimpar.addEventListener('click', () => {
+                textoEntrada.value = '';
+                feedbackContainer.style.display = 'none';
+                previewWrapper.style.display = 'none';
+                acoesResultado.style.display = 'none';
+                docFinal.innerHTML = '';
+                dadosAtuais = null;
+            });
+
+            btnGerar.addEventListener('click', () => {
+                const texto = textoEntrada.value.trim();
+                if (!texto) {
+                    alert('Por favor, cole o texto do comprovante primeiro.');
+                    return;
+                }
+
+                const dadosExtraidos = parseComprovante(texto);
+                if (dadosExtraidos.pneus.length === 0) {
+                    alert('Não foi possível identificar uma tabela de pneus. Verifique o texto colado.');
+                    return;
+                }
+
+                dadosAtuais = dadosExtraidos;
+                numeroColetaAtual = dadosExtraidos.coleta.numero.replace(/[^a-zA-Z0-9]/g, '-');
+                renderizarDocumento(dadosExtraidos);
+                exibirFeedback(dadosExtraidos);
+                previewWrapper.style.display = 'block';
+                acoesResultado.style.display = 'flex';
+                acoesResultado.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+
+            btnImprimir.addEventListener('click', () => window.print());
+
+            btnBaixarPDF.addEventListener('click', async () => {
+                if (!dadosAtuais) return alert('Gere o comprovante primeiro.');
+                const original = btnBaixarPDF.innerHTML;
+                btnBaixarPDF.innerHTML = '⏳ GERANDO PDF...';
+                btnBaixarPDF.disabled = true;
+                try {
+                    const { blob, filename } = await gerarPDFBlob();
+                    baixarBlob(blob, filename);
+                } catch (erro) {
+                    console.error(erro);
+                    alert('Não foi possível gerar o PDF. Erro: ' + (erro.message || erro));
+                } finally {
+                    btnBaixarPDF.innerHTML = original;
+                    btnBaixarPDF.disabled = false;
+                }
+            });
+
+            btnCompartilhar.addEventListener('click', async () => {
+                if (!dadosAtuais) return alert('Gere o comprovante primeiro.');
+                const original = btnCompartilhar.innerHTML;
+                btnCompartilhar.innerHTML = '⏳ PREPARANDO...';
+                btnCompartilhar.disabled = true;
+                try {
+                    const { blob, filename } = await gerarPDFBlob();
+                    const arquivo = new File([blob], filename, { type: 'application/pdf' });
+                    const mensagem = criarMensagemColeta(dadosAtuais);
+                    const payload = { title: `Comprovante de Coleta ${dadosAtuais.coleta.numero}`, text: mensagem, files: [arquivo] };
+
+                    if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [arquivo] }))) {
+                        await navigator.share(payload);
+                    } else {
+                        baixarBlob(blob, filename);
+                        await copiarTexto(mensagem);
+                        abrirWhatsAppTexto(dadosAtuais.coleta.telefone, mensagem);
+                        alert('Este navegador não compartilha PDF diretamente. O PDF foi baixado, a mensagem foi copiada e o WhatsApp será aberto com o texto preenchido.');
+                    }
+                } catch (erro) {
+                    if (erro && erro.name === 'AbortError') return;
+                    console.error(erro);
+                    alert('Não foi possível compartilhar. Erro: ' + (erro.message || erro));
+                } finally {
+                    btnCompartilhar.innerHTML = original;
+                    btnCompartilhar.disabled = false;
+                }
+            });
+        });
+
+        async function gerarPDFBlob() {
+            const elementoOriginal = document.getElementById('documento-final');
+            if (typeof window.html2canvas !== 'function') throw new Error('html2canvas não carregou. Verifique a internet e recarregue.');
+            if (!window.jspdf || !window.jspdf.jsPDF) throw new Error('jsPDF não carregou. Verifique a internet e recarregue.');
+
+            const areaPDF = document.createElement('div');
+            areaPDF.style.cssText = 'position:absolute;left:0;top:0;width:794px;padding:0;margin:0;background:#fff;z-index:999999;visibility:visible;overflow:visible;';
+            const clone = elementoOriginal.cloneNode(true);
+            clone.style.setProperty('width', '794px', 'important');
+            clone.style.setProperty('min-width', '794px', 'important');
+            clone.style.setProperty('max-width', '794px', 'important');
+            clone.style.setProperty('margin', '0', 'important');
+            clone.style.setProperty('padding', '25px', 'important');
+            clone.style.setProperty('box-shadow', 'none', 'important');
+            clone.style.setProperty('background', '#fff', 'important');
+            clone.style.setProperty('overflow', 'visible', 'important');
+
+            elementoOriginal.id = 'documento-final-original';
+            areaPDF.appendChild(clone);
+            document.body.appendChild(areaPDF);
+
+            try {
+                const imagens = Array.from(clone.querySelectorAll('img'));
+                await Promise.all(imagens.map(img => img.complete ? Promise.resolve() : new Promise(resolve => { img.onload = resolve; img.onerror = resolve; })));
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+                const largura = Math.ceil(clone.scrollWidth);
+                const altura = Math.ceil(clone.scrollHeight);
+                const canvas = await window.html2canvas(clone, {
+                    scale: 2, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', logging: false,
+                    scrollX: 0, scrollY: 0, width: largura, height: altura,
+                    windowWidth: Math.max(1200, largura), windowHeight: Math.max(1200, altura)
+                });
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
+                const margem = 8, paginaW = 210, paginaH = 297;
+                const areaW = paginaW - margem * 2, areaH = paginaH - margem * 2;
+                const pxPorMm = canvas.width / areaW;
+                const alturaPaginaPx = Math.floor(areaH * pxPorMm);
+                let origemY = 0, pagina = 0;
+
+                while (origemY < canvas.height) {
+                    const fatiaH = Math.min(alturaPaginaPx, canvas.height - origemY);
+                    const paginaCanvas = document.createElement('canvas');
+                    paginaCanvas.width = canvas.width;
+                    paginaCanvas.height = fatiaH;
+                    const ctx = paginaCanvas.getContext('2d');
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(0, 0, paginaCanvas.width, paginaCanvas.height);
+                    ctx.drawImage(canvas, 0, origemY, canvas.width, fatiaH, 0, 0, canvas.width, fatiaH);
+                    const imgData = paginaCanvas.toDataURL('image/jpeg', 0.98);
+                    const imgH = fatiaH / pxPorMm;
+                    if (pagina > 0) pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', margem, margem, areaW, imgH, undefined, 'FAST');
+                    origemY += fatiaH;
+                    pagina++;
+                }
+
+                return { blob: pdf.output('blob'), filename: `Coleta_${numeroColetaAtual}.pdf` };
+            } finally {
+                areaPDF.remove();
+                elementoOriginal.id = 'documento-final';
+            }
+        }
+
+        function criarMensagemColeta(dados) {
+            const c = dados.coleta;
+            return `Olá! Segue o comprovante da coleta nº ${c.numero}, realizada em ${c.data}.\n\nQuantidade coletada: ${c.quantidade} pneu${c.quantidade === 1 ? '' : 's'}\nVeículo: ${c.veiculo}\nCliente: ${c.clienteNome}\n\nSegue o comprovante para conferência.\nAlterosa Pneus – Filial Norte`;
+        }
+
+        function baixarBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1500);
+        }
+
+        async function copiarTexto(texto) {
+            try { await navigator.clipboard.writeText(texto); } catch (_) {}
+        }
+
+        function abrirWhatsAppTexto(telefone, mensagem) {
+            const somenteDigitos = String(telefone || '').replace(/\D/g, '');
+            let numero = somenteDigitos;
+            if (numero.length === 10 || numero.length === 11) numero = '55' + numero;
+            const url = numero ? `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}` : `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
+            window.open(url, '_blank');
+        }
+
+        function limparValor(valor) {
+            if (!valor || valor.trim() === '' || valor.toLowerCase().trim() === 'null' || valor.toLowerCase().trim() === 'undefined') {
+                return '—';
+            }
+            return valor.trim();
+        }
+
+        function extrair(texto, regex, grupo = 1) {
+            const match = texto.match(regex);
+            return match ? limparValor(match[grupo]) : '—';
+        }
+
+        function parseComprovante(texto) {
+            const dados = {
+                coleta: {
+                    numero: '—', nf: '—', data: '—', dataNF: '—',
+                    veiculo: '—', clienteCodigo: '—', clienteNome: '—',
+                    cnpj: '—', inscricaoEstadual: '—', endereco: '—',
+                    cep: '—', cidade: '—', uf: '—', telefone: '—',
+                    contato: '—', filial: '—', quantidade: 0
+                },
+                pneus: []
+            };
+
+            // ==========================================
+            // 1. DADOS DE CABEÇALHO E CLIENTE
+            // ==========================================
+
+            // Filial com quebras de linha preservadas
+            const matchFilialOriginal = texto.match(/^([\s\S]*?)(?=COMPROVANTE DE COLETA)/i);
+            if (matchFilialOriginal) {
+                let filialTratada = matchFilialOriginal[1].trim().replace(/\r?\n/g, '<br>');
+                filialTratada = filialTratada.replace(/(<br>\s*)+/g, '<br>'); // Remove Enter duplicado
+                dados.coleta.filial = filialTratada;
+            }
+
+            const textoNormalizado = texto.replace(/\s+/g, ' ').trim();
+
+            dados.coleta.numero = extrair(textoNormalizado, /Numero:\s*([\d\/\-]+)/i);
+            dados.coleta.nf = extrair(textoNormalizado, /Num\.NF:\s*([\d]+)/i);
+            dados.coleta.data = extrair(textoNormalizado, /Data:\s*([\d\/]+)/i);
+            dados.coleta.dataNF = extrair(textoNormalizado, /Data NF:\s*([\d\/]+)/i); 
+            dados.coleta.veiculo = extrair(textoNormalizado, /Veiculo:\s*([A-Z0-9\-]+)/i);
+            
+            const matchCliente = textoNormalizado.match(/Cliente:\s*(\d+)?\s*(.+?)(?=\s+CNPJ|\s+Num\.NF|$)/i);
+            if (matchCliente) {
+                dados.coleta.clienteCodigo = limparValor(matchCliente[1]);
+                dados.coleta.clienteNome = limparValor(matchCliente[2]);
+            }
+
+            dados.coleta.cnpj = extrair(textoNormalizado, /CNPJ\/CPF:\s*([\d\.\-\/]+)/i);
+            dados.coleta.inscricaoEstadual = extrair(textoNormalizado, /Insc\.\s*Est\.:\s*(\S+)/i);
+            
+            // Endereço (Tudo entre Inscrição Estadual e CEP)
+            const regexEnd = /Insc\.\s*Est\.:.*?[\r\n]+([\s\S]*?)(?=CEP\.?)/i;
+            const matchEnd = texto.match(regexEnd);
+            if (matchEnd) {
+                dados.coleta.endereco = limparValor(matchEnd[1].replace(/\r?\n/g, ' '));
+            }
+
+            const matchCep = textoNormalizado.match(/CEP\.?\s*([\d\-]+)\s*-\s*([A-Za-z\s]+?)\s*-\s*([A-Z]{2})/i);
+            if (matchCep) {
+                dados.coleta.cep = limparValor(matchCep[1]);
+                dados.coleta.cidade = limparValor(matchCep[2]);
+                dados.coleta.uf = limparValor(matchCep[3]);
+            } else {
+                dados.coleta.cep = extrair(textoNormalizado, /CEP\.?\s*([\d\-]+)/i);
+            }
+
+            // Garante capturar o Telefone do Cliente, não o da filial. Pega a última aparição antes dos pneus.
+            const partesVia = texto.split(/Visto do Coletor/i);
+            const textoVia1 = partesVia[0];
+            const matchTels = [...textoVia1.matchAll(/Tel\.?\s*([\d\(\)\-\s]{8,20})/ig)];
+            if(matchTels.length > 0){
+               let telCliente = matchTels[matchTels.length - 1][1].trim();
+               dados.coleta.telefone = limparValor(telCliente);
+            }
+
+            // ==========================================
+            // 2. PARSER AVANÇADO E BLINDADO DE PNEUS
+            // ==========================================
+
+            // Corta a via original para não buscar dados do sumário de totais
+            let tableText = textoVia1;
+
+            // IMPORTANTE: não usar a palavra isolada "Total" como marcador de fim.
+            // Alguns clientes possuem "TOTAL" no próprio nome (ex.: TOTAL FLEX LOCADORA LTDA),
+            // o que fazia o parser cortar o texto antes de chegar à tabela de pneus.
+            // Agora só encerramos a área da tabela quando encontramos a frase específica
+            // "Quantidade total de pneus:".
+            const matchFimPneus = tableText.match(/Quantidade\s+total\s+de\s+pneus\s*:/i);
+            if (matchFimPneus) {
+                tableText = tableText.substring(0, matchFimPneus.index);
+            }
+
+            let seq = 1;
+
+            while (true) {
+                let seqStrAtual = seq.toString().padStart(3, '0');
+                let seqStrProx = (seq + 1).toString().padStart(3, '0');
+                
+                // EXPRESSÃO MATEMÁTICA: Procura exatamente " 001 " e recorta até o exato " 002 " ou fim.
+                let regexAtual = new RegExp(`(?:^|\\s)${seqStrAtual}\\s+([\\s\\S]*?)(?=(?:\\s${seqStrProx}\\s)|$)`, 'i');
+                let matchPneu = tableText.match(regexAtual);
+
+                if (!matchPneu) break; // Se quebrou a sequência, a tabela de fato acabou.
+
+                // Substitui quebras de linha por espaçamentos longos para forçar a separação por colunas
+                let flatBlock = matchPneu[1].replace(/\r?\n/g, '   ');
+                
+                // Quebra utilizando grandes vazios gerados pelo ERP (2 ou mais espaços, ou tabs)
+                let tokens = flatBlock.split(/ {2,}|\t/).map(t => t.trim()).filter(t => t.length > 0);
+                
+                // Se a cópia foi malfeita (sem espaços grandes), usa o plano B: separa por qualquer espaço.
+                if(tokens.length < 5) {
+                    tokens = flatBlock.split(/\s+/).map(t => t.trim()).filter(t => t.length > 0);
+                }
+
+                // Remove caracteres "lixo" como "(" que sobram de RECAPE(
+                tokens = tokens.map(t => t.replace(/^[\(\)]+|[\(\)]+$/g, '').trim());
+
+                if (tokens.length >= 4) {
+                    // Lê o pneu de TRÁS para FRENTE, porque Serviço, Fogo e Medida sempre estão garantidos no fim
+                    let servico = tokens.pop() || '—'; 
+                    let fogoDot = tokens.pop() || '—'; 
+                    let medida = tokens.pop() || '—';  
+                    
+                    // As primeiras palavras do início são a Marca.
+                    let marca = tokens.shift() || '—'; 
+                    
+                    // Descarta o "Modelo" que sobra, conforme você solicitou.
+                    let modelo = tokens.shift() || '—'; 
+                    
+                    // Tudo que porventura sobrou imprensado no meio se torna o "Desenho"
+                    let desenho = tokens.length > 0 ? tokens.join(' ') : '—'; 
+
+                    dados.pneus.push({
+                        item: seqStrAtual,
+                        marca: marca,
+                        desenho: desenho,
+                        medida: medida,
+                        fogoDot: fogoDot,
+                        servico: servico
+                    });
+                }
+                seq++;
+            }
+
+            dados.coleta.quantidade = dados.pneus.length;
+            return dados;
+        }
+
+        function renderizarDocumento(dados) {
+            const docFinal = document.getElementById('documento-final');
+            
+            // HTML das linhas exclui o "Modelo", possuindo apenas 6 colunas
+            let linhasPneusHTML = '';
+            dados.pneus.forEach(pneu => {
+                linhasPneusHTML += `
+                    <tr>
+                        <td>${pneu.item}</td>
+                        <td>${pneu.fogoDot}</td>
+                        <td>${pneu.medida}</td>
+                        <td class="text-left">${pneu.marca}</td>
+                        <td>${pneu.desenho}</td>
+                        <td class="text-left">${pneu.servico}</td>
+                    </tr>
+                `;
+            });
+
+            const logoUrl = "data:image/png;base64,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";
+
+            docFinal.innerHTML = `
+                <div style="text-align: right; font-size: 11px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase;">Via do Cliente</div>
+                
+                <table style="width: 100%; border: 2px solid #000; margin-bottom: 15px; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 35%; padding: 8px; vertical-align: top; border: none;">
+                            <img src="${logoUrl}" alt="Alterosa Pneus" style="max-width: 140px; max-height: 45px; display: block; margin-bottom: 6px;">
+                            <div style="font-size: 9px; line-height: 1.3; font-weight: bold;">${dados.coleta.filial}</div>
+                        </td>
+                        <td style="width: 33%; padding: 8px; vertical-align: middle; text-align: center; border: none;">
+                            <h2 style="font-size: 16px; margin: 0; white-space: nowrap;">COMPROVANTE DE COLETA</h2>
+                            <p style="font-size: 11px; margin: 4px 0 0 0;">Documento de Conferência de Pneus</p>
+                        </td>
+                        <td style="width: 32%; padding: 8px; vertical-align: middle; text-align: right; border: none; font-size: 11px;">
+                            <div style="margin-bottom: 4px;"><strong>Nº Coleta:</strong> ${dados.coleta.numero}</div>
+                            <div style="margin-bottom: 4px;"><strong>Data:</strong> ${dados.coleta.data}</div>
+                            <div><strong>NF:</strong> ${dados.coleta.nf}</div>
+                        </td>
+                    </tr>
+                </table>
+
+                <div class="secao-titulo">Informações da Coleta</div>
+                <table class="info-table">
+                    <tr>
+                        <th width="70%">CLIENTE</th>
+                        <th width="30%">CÓDIGO</th>
+                    </tr>
+                    <tr>
+                        <td>${dados.coleta.clienteNome}</td>
+                        <td>${dados.coleta.clienteCodigo}</td>
+                    </tr>
+                </table>
+
+                <table class="info-table">
+                    <tr>
+                        <th width="50%">CNPJ / CPF</th>
+                        <th width="50%">INSCRIÇÃO ESTADUAL</th>
+                    </tr>
+                    <tr>
+                        <td>${dados.coleta.cnpj}</td>
+                        <td>${dados.coleta.inscricaoEstadual}</td>
+                    </tr>
+                </table>
+
+                <table class="info-table">
+                    <tr>
+                        <th width="25%">DATA COLETA</th>
+                        <th width="25%">DATA NF</th>
+                        <th width="25%">VEÍCULO</th>
+                        <th width="25%">TELEFONE</th>
+                    </tr>
+                    <tr>
+                        <td>${dados.coleta.data}</td>
+                        <td>${dados.coleta.dataNF}</td>
+                        <td>${dados.coleta.veiculo}</td>
+                        <td>${dados.coleta.telefone}</td>
+                    </tr>
+                </table>
+                
+                <table class="info-table">
+                    <tr>
+                        <th width="60%">ENDEREÇO</th>
+                        <th width="40%">CEP / CIDADE / UF</th>
+                    </tr>
+                    <tr>
+                        <td>${dados.coleta.endereco}</td>
+                        <td>${dados.coleta.cep} - ${dados.coleta.cidade} - ${dados.coleta.uf}</td>
+                    </tr>
+                </table>
+
+                <div class="secao-titulo" style="margin-top: 15px;">Relação de Pneus Coletados</div>
+                <table class="pneus-table">
+                    <thead>
+                        <tr>
+                            <th width="5%">Item</th>
+                            <th width="15%">Fogo / DOT</th>
+                            <th width="20%">Medida</th>
+                            <th width="20%">Marca</th>
+                            <th width="20%">Desenho</th>
+                            <th width="20%">Serviço</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${linhasPneusHTML}
+                    </tbody>
+                </table>
+
+                <div class="total-pneus">
+                    QUANTIDADE TOTAL DE PNEUS: ${dados.coleta.quantidade}
+                </div>
+
+                <div class="secao-titulo">Observações</div>
+                <div class="obs-box"></div>
+
+                <div class="assinaturas">
+                    <div class="assinatura-box">
+                        <div class="linha-assinatura"></div>
+                        Visto do Cliente
+                    </div>
+                </div>
+            `;
+        }
+
+        function exibirFeedback(dados) {
+            const fb = document.getElementById('feedback-container');
+            const camposImportantes = [dados.coleta.numero, dados.coleta.clienteNome, dados.coleta.veiculo];
+            const possuiAlerta = camposImportantes.some(campo => campo === '—');
+
+            let html = `
+                <h3>✓ Comprovante processado com sucesso</h3>
+                <ul>
+                    <li><strong>Coleta:</strong> ${dados.coleta.numero}</li>
+                    <li><strong>Cliente:</strong> ${dados.coleta.clienteNome}</li>
+                    <li><strong>Pneus identificados:</strong> ${dados.coleta.quantidade}</li>
+                </ul>
+            `;
+
+            if (possuiAlerta) {
+                html += `<div class="aviso">⚠ Alguns campos ficaram em branco. Confira o documento.</div>`;
+            }
+
+            fb.innerHTML = html;
+            fb.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
