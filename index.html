@@ -62,6 +62,8 @@
         #btn-baixar-pdf:hover { background-color: #219150; }
         #btn-compartilhar { background-color: #16a085; }
         #btn-compartilhar:hover { background-color: #138d75; }
+        #btn-copiar-texto { background-color: #8e44ad; }
+        #btn-copiar-texto:hover { background-color: #7d3c98; }
         #btn-instalar { background-color: #8e44ad; display: none; }
         #btn-instalar:hover { background-color: #7d3c98; }
         #pwa-status { margin: -5px 0 20px; padding: 10px 12px; border-radius: 5px; background: #fff8e1; color: #7a5d00; font-size: 13px; display: none; }
@@ -176,6 +178,7 @@
         <div id="acoes-resultado">
             <button id="btn-imprimir">🖨️ IMPRIMIR</button>
             <button id="btn-baixar-pdf">📄 BAIXAR PDF</button>
+            <button id="btn-copiar-texto">📋 COPIAR TEXTO</button>
             <button id="btn-compartilhar">📤 COMPARTILHAR</button>
         </div>
 
@@ -228,6 +231,7 @@
             const btnLimpar = document.getElementById('btn-limpar');
             const btnImprimir = document.getElementById('btn-imprimir');
             const btnBaixarPDF = document.getElementById('btn-baixar-pdf');
+            const btnCopiarTexto = document.getElementById('btn-copiar-texto');
             const btnCompartilhar = document.getElementById('btn-compartilhar');
             const btnInstalar = document.getElementById('btn-instalar');
             const btnInstalarBanner = document.getElementById('btn-instalar-banner');
@@ -312,6 +316,30 @@
                 } finally {
                     btnBaixarPDF.innerHTML = original;
                     btnBaixarPDF.disabled = false;
+                }
+            });
+
+            btnCopiarTexto.addEventListener('click', async () => {
+                if (!dadosAtuais) return alert('Gere o comprovante primeiro.');
+
+                const mensagem = criarMensagemColeta(dadosAtuais);
+                const original = btnCopiarTexto.innerHTML;
+                btnCopiarTexto.disabled = true;
+                btnCopiarTexto.innerHTML = '⏳ COPIANDO...';
+
+                try {
+                    const copiou = await copiarTexto(mensagem);
+                    if (copiou) {
+                        btnCopiarTexto.innerHTML = '✅ TEXTO COPIADO';
+                        alert('Mensagem copiada! Agora compartilhe o PDF e, no WhatsApp, toque em "Adicione uma legenda..." e escolha COLAR.');
+                    } else {
+                        alert('Não foi possível copiar automaticamente. Toque novamente ou verifique a permissão da área de transferência do navegador.');
+                    }
+                } finally {
+                    setTimeout(() => {
+                        btnCopiarTexto.innerHTML = original;
+                        btnCopiarTexto.disabled = false;
+                    }, 1800);
                 }
             });
 

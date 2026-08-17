@@ -41,3 +41,8 @@ A instalação PWA e o compartilhamento nativo precisam de HTTPS. O GitHub Pages
 ## WhatsApp no Android
 
 Ao tocar em **COMPARTILHAR**, a mensagem da coleta é copiada automaticamente. No WhatsApp, toque em **Adicione uma legenda...** e escolha **Colar** antes de enviar o PDF.
+
+
+## Botão COPIAR TEXTO
+
+Depois de gerar o comprovante, use **📋 COPIAR TEXTO** para copiar a mensagem breve da coleta. No WhatsApp, ao compartilhar o PDF, toque em **Adicione uma legenda...** e escolha **Colar**.
