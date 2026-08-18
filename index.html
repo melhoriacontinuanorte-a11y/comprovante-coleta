@@ -161,6 +161,7 @@
 <body>
 
     <div id="app-container">
+        <div style="text-align:right;font-size:11px;color:#888;margin-bottom:4px;">Versão 6.0</div>
         <h1>Gerador de Comprovante de Coleta</h1>
         <p class="instrucao">Cole abaixo o texto bruto do comprovante. O sistema extrai os dados, gera o PDF e permite compartilhar o comprovante pelo menu nativo do tablet.</p>
         <div id="pwa-status"></div>
@@ -766,14 +767,19 @@
             // 2. PARSER AVANÇADO E BLINDADO DE PNEUS
             // ==========================================
 
-            // Corta a via original para não buscar dados do sumário de totais
+            // Isola SOMENTE a tabela de pneus.
+            // Isso é essencial porque números de sequência podem existir no cabeçalho.
+            // Exemplo real: "ROD MG 050 KM..." fazia o item 050 ser confundido com a rodovia.
             let tableText = textoVia1;
 
-            // IMPORTANTE: não usar a palavra isolada "Total" como marcador de fim.
-            // Alguns clientes possuem "TOTAL" no próprio nome (ex.: TOTAL FLEX LOCADORA LTDA),
-            // o que fazia o parser cortar o texto antes de chegar à tabela de pneus.
-            // Agora só encerramos a área da tabela quando encontramos a frase específica
-            // "Quantidade total de pneus:".
+            // Primeiro localiza o item 001 no INÍCIO de uma linha.
+            // A partir daqui, filial/endereço/CEP deixam de participar do parser dos pneus.
+            const matchInicioTabela = tableText.match(/^\s*001\s+/m);
+            if (matchInicioTabela) {
+                tableText = tableText.substring(matchInicioTabela.index);
+            }
+
+            // Encerra somente na frase específica de quantidade total.
             const matchFimPneus = tableText.match(/Quantidade\s+total\s+de\s+pneus\s*:/i);
             if (matchFimPneus) {
                 tableText = tableText.substring(0, matchFimPneus.index);
@@ -785,8 +791,9 @@
                 let seqStrAtual = seq.toString().padStart(3, '0');
                 let seqStrProx = (seq + 1).toString().padStart(3, '0');
                 
-                // EXPRESSÃO MATEMÁTICA: Procura exatamente " 001 " e recorta até o exato " 002 " ou fim.
-                let regexAtual = new RegExp(`(?:^|\\s)${seqStrAtual}\\s+([\\s\\S]*?)(?=(?:\\s${seqStrProx}\\s)|$)`, 'i');
+                // Cada sequência precisa estar no INÍCIO de uma linha.
+                // Evita colisões com números presentes em endereço, rodovia, telefone etc.
+                let regexAtual = new RegExp(`(?:^|\\n)\\s*${seqStrAtual}\\s+([\\s\\S]*?)(?=\\n\\s*${seqStrProx}\\s+|$)`, 'i');
                 let matchPneu = tableText.match(regexAtual);
 
                 if (!matchPneu) break; // Se quebrou a sequência, a tabela de fato acabou.
