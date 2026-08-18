@@ -221,7 +221,7 @@
 <body>
 
     <div id="app-container">
-        <div style="text-align:right;font-size:11px;color:#888;margin-bottom:4px;">Versão 12.0</div>
+        <div style="text-align:right;font-size:11px;color:#888;margin-bottom:4px;">Versão 13.0</div>
         <h1>Gerador de Comprovante de Coleta</h1>
         <p class="instrucao">Cole abaixo o texto bruto do comprovante. O sistema extrai os dados, gera o PDF e permite compartilhar o comprovante pelo menu nativo do tablet.</p>
         <div id="pwa-status"></div>
@@ -1070,11 +1070,29 @@
             // 1. DADOS DE CABEÇALHO E CLIENTE
             // ==========================================
 
-            // Filial com quebras de linha preservadas
+            // Filial com quebras de linha preservadas.
+            // Alguns textos copiados podem trazer um fragmento da tabela de pneus ANTES do cabeçalho.
+            // Ex.: "Medida / N.Fogo / Serviço / 001 ... / 002 ...". Nesse caso, usamos apenas
+            // as ÚLTIMAS linhas válidas antes de "COMPROVANTE DE COLETA", descartando linhas da tabela.
             const matchFilialOriginal = texto.match(/^([\s\S]*?)(?=COMPROVANTE DE COLETA)/i);
             if (matchFilialOriginal) {
-                let filialTratada = matchFilialOriginal[1].trim().replace(/\r?\n/g, '<br>');
-                filialTratada = filialTratada.replace(/(<br>\s*)+/g, '<br>'); // Remove Enter duplicado
+                const linhasBrutas = matchFilialOriginal[1]
+                    .split(/\r?\n/)
+                    .map(l => l.trim())
+                    .filter(Boolean);
+
+                const linhasFiltradas = linhasBrutas.filter(linha => {
+                    if (/^(#|Medida|N\.?Fogo\/Dot|N\.?Fogo|Servico|Serviço|Marca|Modelo|Desenho)\b/i.test(linha)) return false;
+                    if (/^\d{3}\s+/i.test(linha)) return false;
+                    if (/\b\d{3,4}\/\d{2}R\d{2}(?:\.\d)?\b/i.test(linha)) return false;
+                    if (/\b\d{4}R\d{2}\b/i.test(linha)) return false;
+                    if (/\b(?:CONSERTO|RECAPE|TAP\s*RAP)\b/i.test(linha) && linha.length < 40) return false;
+                    return true;
+                });
+
+                const linhasFilial = (linhasFiltradas.length ? linhasFiltradas : linhasBrutas).slice(-5);
+                let filialTratada = linhasFilial.join('<br>');
+                filialTratada = filialTratada.replace(/(<br>\s*)+/g, '<br>');
                 dados.coleta.filial = filialTratada;
             }
 
