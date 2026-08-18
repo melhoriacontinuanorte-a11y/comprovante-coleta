@@ -447,7 +447,7 @@
 
         function criarMensagemColeta(dados) {
             const c = dados.coleta;
-            return `Olá! Segue o comprovante da coleta nº ${c.numero}, realizada em ${c.data}.\n\nQuantidade coletada: ${c.quantidade} pneu${c.quantidade === 1 ? '' : 's'}\nVeículo: ${c.veiculo}\nCliente: ${c.clienteNome}\n\nSegue o comprovante para conferência.\nAlterosa Pneus – Filial Norte`;
+            return `Olá! Segue o comprovante da coleta nº ${c.numero}, realizada em ${c.data}.\n\nQuantidade coletada: ${c.quantidade} pneu${c.quantidade === 1 ? '' : 's'}\nVeículo: ${c.veiculo}\nCliente: ${c.clienteNome}\n\nSolicitamos que confira as informações e responda:\n\n✅ DE ACORDO\n\nCaso exista alguma divergência, favor responder nesta conversa.\n\nAtenciosamente,\nCentral de Coletas Recapagem Alterosa Ltda.`;
         }
 
         function baixarBlob(blob, filename) {
