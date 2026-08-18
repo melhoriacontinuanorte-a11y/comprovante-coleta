@@ -380,69 +380,254 @@
         });
 
         async function gerarPDFBlob() {
-            const elementoOriginal = document.getElementById('documento-final');
-            if (typeof window.html2canvas !== 'function') throw new Error('html2canvas não carregou. Verifique a internet e recarregue.');
-            if (!window.jspdf || !window.jspdf.jsPDF) throw new Error('jsPDF não carregou. Verifique a internet e recarregue.');
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                throw new Error('jsPDF não carregou. Verifique a internet e recarregue.');
+            }
+            if (!dadosAtuais) {
+                throw new Error('Gere o comprovante primeiro.');
+            }
 
-            const areaPDF = document.createElement('div');
-            areaPDF.style.cssText = 'position:absolute;left:0;top:0;width:794px;padding:0;margin:0;background:#fff;z-index:999999;visibility:visible;overflow:visible;';
-            const clone = elementoOriginal.cloneNode(true);
-            clone.style.setProperty('width', '794px', 'important');
-            clone.style.setProperty('min-width', '794px', 'important');
-            clone.style.setProperty('max-width', '794px', 'important');
-            clone.style.setProperty('margin', '0', 'important');
-            clone.style.setProperty('padding', '25px', 'important');
-            clone.style.setProperty('box-shadow', 'none', 'important');
-            clone.style.setProperty('background', '#fff', 'important');
-            clone.style.setProperty('overflow', 'visible', 'important');
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                unit: 'mm',
+                format: 'a4',
+                orientation: 'portrait',
+                compress: true
+            });
 
-            elementoOriginal.id = 'documento-final-original';
-            areaPDF.appendChild(clone);
-            document.body.appendChild(areaPDF);
+            const dados = dadosAtuais;
+            const c = dados.coleta;
+            const pageW = 210;
+            const pageH = 297;
+            const margem = 10;
+            const largura = pageW - (margem * 2);
 
-            try {
-                const imagens = Array.from(clone.querySelectorAll('img'));
-                await Promise.all(imagens.map(img => img.complete ? Promise.resolve() : new Promise(resolve => { img.onload = resolve; img.onerror = resolve; })));
-                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+            // Converte valores vazios/traço longo para um formato seguro no PDF.
+            const txt = (v) => {
+                if (v === null || v === undefined) return '-';
+                const s = String(v).trim();
+                if (!s || s === '—' || s.toLowerCase() === 'null' || s.toLowerCase() === 'undefined') return '-';
+                return s.replace(/—/g, '-');
+            };
 
-                const largura = Math.ceil(clone.scrollWidth);
-                const altura = Math.ceil(clone.scrollHeight);
-                const canvas = await window.html2canvas(clone, {
-                    scale: 2, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', logging: false,
-                    scrollX: 0, scrollY: 0, width: largura, height: altura,
-                    windowWidth: Math.max(1200, largura), windowHeight: Math.max(1200, altura)
-                });
+            const linha = (x1, y1, x2, y2, w = 0.25) => {
+                doc.setLineWidth(w);
+                doc.line(x1, y1, x2, y2);
+            };
 
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
-                const margem = 8, paginaW = 210, paginaH = 297;
-                const areaW = paginaW - margem * 2, areaH = paginaH - margem * 2;
-                const pxPorMm = canvas.width / areaW;
-                const alturaPaginaPx = Math.floor(areaH * pxPorMm);
-                let origemY = 0, pagina = 0;
+            const ret = (x, y, w, h, fill = null) => {
+                if (fill) {
+                    doc.setFillColor(fill[0], fill[1], fill[2]);
+                    doc.rect(x, y, w, h, 'FD');
+                } else {
+                    doc.rect(x, y, w, h);
+                }
+            };
 
-                while (origemY < canvas.height) {
-                    const fatiaH = Math.min(alturaPaginaPx, canvas.height - origemY);
-                    const paginaCanvas = document.createElement('canvas');
-                    paginaCanvas.width = canvas.width;
-                    paginaCanvas.height = fatiaH;
-                    const ctx = paginaCanvas.getContext('2d');
-                    ctx.fillStyle = '#fff';
-                    ctx.fillRect(0, 0, paginaCanvas.width, paginaCanvas.height);
-                    ctx.drawImage(canvas, 0, origemY, canvas.width, fatiaH, 0, 0, canvas.width, fatiaH);
-                    const imgData = paginaCanvas.toDataURL('image/jpeg', 0.98);
-                    const imgH = fatiaH / pxPorMm;
-                    if (pagina > 0) pdf.addPage();
-                    pdf.addImage(imgData, 'JPEG', margem, margem, areaW, imgH, undefined, 'FAST');
-                    origemY += fatiaH;
-                    pagina++;
+            const textoCelula = (texto, x, y, w, h, opts = {}) => {
+                const fontSize = opts.fontSize || 7.5;
+                const bold = !!opts.bold;
+                const align = opts.align || 'left';
+                doc.setFont('helvetica', bold ? 'bold' : 'normal');
+                doc.setFontSize(fontSize);
+                const linhas = doc.splitTextToSize(txt(texto), Math.max(2, w - 2.5));
+                const lineH = fontSize * 0.36;
+                const alturaTexto = linhas.length * lineH;
+                let yy = y + (h - alturaTexto) / 2 + lineH * 0.78;
+                if (yy < y + 2.2) yy = y + 2.2;
+
+                if (align === 'center') {
+                    doc.text(linhas, x + w / 2, yy, { align: 'center' });
+                } else if (align === 'right') {
+                    doc.text(linhas, x + w - 1.2, yy, { align: 'right' });
+                } else {
+                    doc.text(linhas, x + 1.2, yy);
+                }
+            };
+
+            const tituloSecao = (titulo, y) => {
+                ret(margem, y, largura, 7, [235, 235, 235]);
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(8.5);
+                doc.text(titulo.toUpperCase(), margem + 2, y + 4.7);
+                return y + 7;
+            };
+
+            const desenharCabecalhoPrincipal = () => {
+                let y = 10;
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(7);
+                doc.text('VIA DO CLIENTE', pageW - margem, 7, { align: 'right' });
+
+                ret(margem, y, largura, 32);
+
+                // Logo já renderizada no preview; usa a mesma imagem embutida.
+                const logoImg = document.querySelector('#documento-final img');
+                if (logoImg && logoImg.src) {
+                    try {
+                        doc.addImage(logoImg.src, 'PNG', margem + 3, y + 3, 36, 10.5, undefined, 'FAST');
+                    } catch (e) {
+                        console.warn('Logo não inserida no PDF:', e);
+                    }
                 }
 
-                return { blob: pdf.output('blob'), filename: `Coleta_${numeroColetaAtual}.pdf` };
-            } finally {
-                areaPDF.remove();
-                elementoOriginal.id = 'documento-final';
+                const filialLinhas = txt(c.filial).replace(/<br\s*\/?>/gi, '\n').split('\n').filter(Boolean);
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(6.5);
+                doc.text(filialLinhas, margem + 3, y + 15);
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(13);
+                doc.text('COMPROVANTE DE COLETA', 105, y + 15, { align: 'center' });
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(7.5);
+                doc.text('Documento de Conferência de Pneus', 105, y + 21, { align: 'center' });
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(7.5);
+                doc.text(`Nº Coleta: ${txt(c.numero)}`, pageW - margem - 3, y + 11, { align: 'right' });
+                doc.text(`Data: ${txt(c.data)}`, pageW - margem - 3, y + 17, { align: 'right' });
+                doc.text(`NF: ${txt(c.nf)}`, pageW - margem - 3, y + 23, { align: 'right' });
+
+                y += 36;
+
+                y = tituloSecao('Informações da Coleta', y);
+
+                // Cliente / código
+                const h = 13;
+                ret(margem, y, 140, h);
+                ret(margem + 140, y, 50, h);
+                doc.setFillColor(245,245,245);
+                doc.rect(margem, y, 140, 5, 'F');
+                doc.rect(margem + 140, y, 50, 5, 'F');
+                doc.setFont('helvetica','bold'); doc.setFontSize(6.5);
+                doc.text('CLIENTE', margem + 1.2, y + 3.4);
+                doc.text('CÓDIGO', margem + 141.2, y + 3.4);
+                textoCelula(c.clienteNome, margem, y + 5, 140, 8, {bold:true});
+                textoCelula(c.clienteCodigo, margem + 140, y + 5, 50, 8, {bold:true});
+                y += h + 4;
+
+                // CNPJ / IE
+                ret(margem, y, 95, h);
+                ret(margem + 95, y, 95, h);
+                doc.setFillColor(245,245,245);
+                doc.rect(margem, y, 95, 5, 'F');
+                doc.rect(margem + 95, y, 95, 5, 'F');
+                doc.setFont('helvetica','bold'); doc.setFontSize(6.5);
+                doc.text('CNPJ / CPF', margem + 1.2, y + 3.4);
+                doc.text('INSCRIÇÃO ESTADUAL', margem + 96.2, y + 3.4);
+                textoCelula(c.cnpj, margem, y + 5, 95, 8, {bold:true});
+                textoCelula(c.inscricaoEstadual, margem + 95, y + 5, 95, 8, {bold:true});
+                y += h + 4;
+
+                // Data / Data NF / Veículo / Telefone
+                const col4 = 47.5;
+                ['DATA COLETA','DATA NF','VEÍCULO','TELEFONE'].forEach((t, i) => {
+                    ret(margem + i*col4, y, col4, h);
+                    doc.setFillColor(245,245,245);
+                    doc.rect(margem + i*col4, y, col4, 5, 'F');
+                    doc.setFont('helvetica','bold'); doc.setFontSize(6.2);
+                    doc.text(t, margem + i*col4 + 1.2, y + 3.4);
+                });
+                [c.data, c.dataNF, c.veiculo, c.telefone].forEach((v, i) => {
+                    textoCelula(v, margem + i*col4, y + 5, col4, 8, {bold:true});
+                });
+                y += h + 4;
+
+                // Endereço / CEP
+                ret(margem, y, 115, h);
+                ret(margem + 115, y, 75, h);
+                doc.setFillColor(245,245,245);
+                doc.rect(margem, y, 115, 5, 'F');
+                doc.rect(margem + 115, y, 75, 5, 'F');
+                doc.setFont('helvetica','bold'); doc.setFontSize(6.5);
+                doc.text('ENDEREÇO', margem + 1.2, y + 3.4);
+                doc.text('CEP / CIDADE / UF', margem + 116.2, y + 3.4);
+                textoCelula(c.endereco, margem, y + 5, 115, 8, {bold:true, fontSize:6.8});
+                textoCelula(`${txt(c.cep)} - ${txt(c.cidade)} - ${txt(c.uf)}`, margem + 115, y + 5, 75, 8, {bold:true, fontSize:6.8});
+                y += h + 4;
+
+                return y;
+            };
+
+            const colunas = [
+                {nome:'Item', w:10, campo:'item', align:'center'},
+                {nome:'Fogo / DOT', w:29, campo:'fogoDot', align:'center'},
+                {nome:'Medida', w:38, campo:'medida', align:'center'},
+                {nome:'Marca', w:38, campo:'marca', align:'left'},
+                {nome:'Desenho', w:38, campo:'desenho', align:'center'},
+                {nome:'Serviço', w:37, campo:'servico', align:'left'}
+            ];
+
+            const desenharCabecalhoTabela = (y, mostrarTitulo = true) => {
+                if (mostrarTitulo) {
+                    y = tituloSecao('Relação de Pneus Coletados', y);
+                }
+                let x = margem;
+                const h = 7;
+                colunas.forEach(col => {
+                    ret(x, y, col.w, h, [220,220,220]);
+                    textoCelula(col.nome, x, y, col.w, h, {bold:true, align:'center', fontSize:7});
+                    x += col.w;
+                });
+                return y + h;
+            };
+
+            // JS não possui True; corrigido logo abaixo por substituição textual.
+            let y = desenharCabecalhoPrincipal();
+            y = desenharCabecalhoTabela(y, true);
+
+            const rowH = 6.4;
+            const limiteInferior = pageH - margem - 12;
+
+            dados.pneus.forEach((pneu) => {
+                if (y + rowH > limiteInferior) {
+                    doc.addPage();
+                    y = 12;
+                    doc.setFont('helvetica','bold');
+                    doc.setFontSize(7);
+                    doc.text(`Coleta ${txt(c.numero)} - Continuação`, margem, 8);
+                    y = desenharCabecalhoTabela(y, true);
+                }
+
+                let x = margem;
+                colunas.forEach(col => {
+                    ret(x, y, col.w, rowH);
+                    textoCelula(pneu[col.campo], x, y, col.w, rowH, {
+                        align: col.align,
+                        fontSize: 7
+                    });
+                    x += col.w;
+                });
+                y += rowH;
+            });
+
+            // Total + observações + assinatura nunca são cortados no meio.
+            const alturaFinal = 39;
+            if (y + alturaFinal > pageH - margem) {
+                doc.addPage();
+                y = 15;
             }
+
+            doc.setFont('helvetica','bold');
+            doc.setFontSize(9);
+            doc.text(`QUANTIDADE TOTAL DE PNEUS: ${dados.pneus.length}`, pageW - margem, y + 7, {align:'right'});
+            y += 13;
+
+            y = tituloSecao('Observações', y);
+            ret(margem, y, largura, 18);
+            y += 27;
+
+            linha(75, y, 135, y);
+            doc.setFont('helvetica','normal');
+            doc.setFontSize(7.5);
+            doc.text('Visto do Cliente', 105, y + 5, {align:'center'});
+
+            return {
+                blob: doc.output('blob'),
+                filename: `Coleta_${numeroColetaAtual}.pdf`
+            };
         }
 
         function criarMensagemColeta(dados) {
@@ -553,13 +738,19 @@
                 dados.coleta.endereco = limparValor(matchEnd[1].replace(/\r?\n/g, ' '));
             }
 
-            const matchCep = textoNormalizado.match(/CEP\.?\s*([\d\-]+)\s*-\s*([A-Za-z\s]+?)\s*-\s*([A-Z]{2})/i);
+            // CEP/Cidade/UF do CLIENTE: procura apenas a partir de "Cliente:"
+            // para não capturar o CEP da filial que aparece no cabeçalho.
+            const posCliente = texto.search(/Cliente:/i);
+            const textoCliente = posCliente >= 0 ? texto.substring(posCliente) : texto;
+            const textoClienteNormalizado = textoCliente.replace(/\s+/g, ' ').trim();
+
+            const matchCep = textoClienteNormalizado.match(/CEP\.?\s*([\d\-]+)\s*-\s*([A-Za-zÀ-ÿ\s]+?)\s*-\s*([A-Z]{2})/i);
             if (matchCep) {
                 dados.coleta.cep = limparValor(matchCep[1]);
                 dados.coleta.cidade = limparValor(matchCep[2]);
                 dados.coleta.uf = limparValor(matchCep[3]);
             } else {
-                dados.coleta.cep = extrair(textoNormalizado, /CEP\.?\s*([\d\-]+)/i);
+                dados.coleta.cep = extrair(textoClienteNormalizado, /CEP\.?\s*([\d\-]+)/i);
             }
 
             // Garante capturar o Telefone do Cliente, não o da filial. Pega a última aparição antes dos pneus.
@@ -612,7 +803,11 @@
                 }
 
                 // Remove caracteres "lixo" como "(" que sobram de RECAPE(
-                tokens = tokens.map(t => t.replace(/^[\(\)]+|[\(\)]+$/g, '').trim());
+                // e FILTRA NOVAMENTE os vazios. Sem este segundo filtro, o "("
+                // virava uma string vazia no fim e deslocava Serviço/Fogo/Medida.
+                tokens = tokens
+                    .map(t => t.replace(/^[\(\)]+|[\(\)]+$/g, '').trim())
+                    .filter(t => t.length > 0);
 
                 if (tokens.length >= 4) {
                     // Lê o pneu de TRÁS para FRENTE, porque Serviço, Fogo e Medida sempre estão garantidos no fim
