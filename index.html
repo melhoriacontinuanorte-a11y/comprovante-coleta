@@ -146,6 +146,47 @@
         .assinatura-box { text-align: center; width: 40%; font-size: 12px; }
         .linha-assinatura { border-top: 1px solid #000; margin-bottom: 5px; }
 
+
+        #assinatura-container {
+            display: none;
+            margin: 20px 0 25px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        #assinatura-container h3 { color: var(--primary-color); margin-bottom: 6px; font-size: 18px; }
+        #assinatura-container p { color: #666; margin-bottom: 12px; font-size: 13px; }
+        .assinatura-pad-wrap { border: 2px dashed #bbb; border-radius: 8px; background: #fff; overflow: hidden; }
+        #assinatura-canvas { width: 100%; height: 180px; display: block; background: #fff; touch-action: none; cursor: crosshair; }
+        .assinatura-botoes { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+        #btn-limpar-assinatura { background-color: #c0392b; }
+        #btn-limpar-assinatura:hover { background-color: #a93226; }
+        #btn-usar-assinatura { background-color: #2980b9; }
+        #btn-usar-assinatura:hover { background-color: #2471a3; }
+        .assinatura-box { position: relative; min-height: 88px; }
+        .assinatura-imagem { display: block; max-width: 100%; max-height: 54px; margin: 0 auto 6px auto; object-fit: contain; }
+
+
+        .assinatura-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .assinatura-card {
+            border: 1px solid #ddd; border-radius: 8px; background: #fff; padding: 14px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+        .assinatura-card h4 { color: var(--primary-color); margin-bottom: 10px; font-size: 16px; }
+        .assinatura-label { display: block; font-size: 13px; font-weight: bold; color: #555; margin-bottom: 6px; }
+        .assinatura-input {
+            width: 100%; padding: 10px 12px; border: 1px solid #cfcfcf; border-radius: 6px;
+            font-size: 14px; margin-bottom: 12px;
+        }
+        .assinatura-input:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 2px rgba(52,152,219,0.15); }
+        .assinatura-subtexto { font-size: 12px; color: #666; margin: -4px 0 10px 0; }
+        .assinatura-role { display:block; margin-top: 5px; font-size: 12px; }
+        .assinatura-nome-preview { display:block; margin-top: 3px; font-size: 12px; font-weight: bold; min-height: 16px; }
+        @media (max-width: 700px) {
+            .assinatura-grid { grid-template-columns: 1fr; }
+        }
+
         /* ==========================================================================
            CONFIGURAÇÕES DE IMPRESSÃO NATIVA DO NAVEGADOR
            ========================================================================== */
@@ -161,7 +202,7 @@
 <body>
 
     <div id="app-container">
-        <div style="text-align:right;font-size:11px;color:#888;margin-bottom:4px;">Versão 6.0</div>
+        <div style="text-align:right;font-size:11px;color:#888;margin-bottom:4px;">Versão 8.0</div>
         <h1>Gerador de Comprovante de Coleta</h1>
         <p class="instrucao">Cole abaixo o texto bruto do comprovante. O sistema extrai os dados, gera o PDF e permite compartilhar o comprovante pelo menu nativo do tablet.</p>
         <div id="pwa-status"></div>
@@ -183,6 +224,39 @@
             <button id="btn-compartilhar">📤 COMPARTILHAR</button>
         </div>
 
+        <div id="assinatura-container">
+            <h3>✍️ Assinaturas</h3>
+            <p>Preencha os nomes e peça para o cliente e o coletor assinarem no tablet. Depois aplique as assinaturas no comprovante. As duas assinaturas irão para o preview, PDF e comprovante final.</p>
+            <div class="assinatura-grid">
+                <div class="assinatura-card">
+                    <h4>Cliente</h4>
+                    <label class="assinatura-label" for="nome-cliente-assinatura">Nome do Cliente</label>
+                    <input type="text" id="nome-cliente-assinatura" class="assinatura-input" placeholder="Digite o nome do cliente">
+                    <div class="assinatura-subtexto">Assinatura do cliente</div>
+                    <div class="assinatura-pad-wrap">
+                        <canvas id="assinatura-canvas-cliente"></canvas>
+                    </div>
+                    <div class="assinatura-botoes">
+                        <button id="btn-usar-assinatura-cliente">✅ USAR ASSINATURA DO CLIENTE</button>
+                        <button id="btn-limpar-assinatura-cliente">🗑️ LIMPAR</button>
+                    </div>
+                </div>
+                <div class="assinatura-card">
+                    <h4>Coletor / Motorista</h4>
+                    <label class="assinatura-label" for="nome-coletor-assinatura">Nome do Coletor</label>
+                    <input type="text" id="nome-coletor-assinatura" class="assinatura-input" placeholder="Digite o nome do coletor">
+                    <div class="assinatura-subtexto">Assinatura do coletor / motorista</div>
+                    <div class="assinatura-pad-wrap">
+                        <canvas id="assinatura-canvas-coletor"></canvas>
+                    </div>
+                    <div class="assinatura-botoes">
+                        <button id="btn-usar-assinatura-coletor">✅ USAR ASSINATURA DO COLETOR</button>
+                        <button id="btn-limpar-assinatura-coletor">🗑️ LIMPAR</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="preview-wrapper">
             <div id="documento-final"></div>
         </div>
@@ -192,6 +266,8 @@
         let numeroColetaAtual = "comprovante"; 
 
         let dadosAtuais = null;
+        let assinaturaClienteDataURL = '';
+        let assinaturaColetorDataURL = '';
         let deferredInstallPrompt = null;
 
         function atualizarOfertaInstalacao(disponivel) {
@@ -243,7 +319,19 @@
             const docFinal = document.getElementById('documento-final');
             const previewWrapper = document.getElementById('preview-wrapper');
             const acoesResultado = document.getElementById('acoes-resultado');
+            const assinaturaContainer = document.getElementById('assinatura-container');
+            const assinaturaCanvasCliente = document.getElementById('assinatura-canvas-cliente');
+            const assinaturaCanvasColetor = document.getElementById('assinatura-canvas-coletor');
+            const btnUsarAssinaturaCliente = document.getElementById('btn-usar-assinatura-cliente');
+            const btnLimparAssinaturaCliente = document.getElementById('btn-limpar-assinatura-cliente');
+            const btnUsarAssinaturaColetor = document.getElementById('btn-usar-assinatura-coletor');
+            const btnLimparAssinaturaColetor = document.getElementById('btn-limpar-assinatura-coletor');
+            const nomeClienteAssinaturaInput = document.getElementById('nome-cliente-assinatura');
+            const nomeColetorAssinaturaInput = document.getElementById('nome-coletor-assinatura');
             const pwaStatus = document.getElementById('pwa-status');
+
+            inicializarAssinaturaCanvas(assinaturaCanvasCliente, 'cliente');
+            inicializarAssinaturaCanvas(assinaturaCanvasColetor, 'coletor');
 
             if (location.protocol === 'file:') {
                 pwaStatus.textContent = 'Para instalar o app e compartilhar o PDF diretamente, publique esta pasta em HTTPS. Abrir o arquivo diretamente ainda permite testar geração e download.';
@@ -275,8 +363,13 @@
                 feedbackContainer.style.display = 'none';
                 previewWrapper.style.display = 'none';
                 acoesResultado.style.display = 'none';
+                assinaturaContainer.style.display = 'none';
                 docFinal.innerHTML = '';
                 dadosAtuais = null;
+                nomeClienteAssinaturaInput.value = '';
+                nomeColetorAssinaturaInput.value = '';
+                limparAssinatura('cliente', true);
+                limparAssinatura('coletor', true);
             });
 
             btnGerar.addEventListener('click', () => {
@@ -298,6 +391,10 @@
                 exibirFeedback(dadosExtraidos);
                 previewWrapper.style.display = 'block';
                 acoesResultado.style.display = 'flex';
+                assinaturaContainer.style.display = 'block';
+                nomeClienteAssinaturaInput.value = dadosExtraidos.coleta.clienteNome && dadosExtraidos.coleta.clienteNome !== '—' ? dadosExtraidos.coleta.clienteNome : '';
+                if (!nomeColetorAssinaturaInput.value) nomeColetorAssinaturaInput.value = '';
+                aplicarAssinaturasNoDocumento();
                 acoesResultado.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
 
@@ -344,6 +441,39 @@
                 }
             });
 
+            nomeClienteAssinaturaInput.addEventListener('input', aplicarAssinaturasNoDocumento);
+            nomeColetorAssinaturaInput.addEventListener('input', aplicarAssinaturasNoDocumento);
+
+            btnUsarAssinaturaCliente.addEventListener('click', () => {
+                if (!dadosAtuais) return alert('Gere o comprovante primeiro.');
+                const possui = capturarAssinaturaDoCanvas('cliente');
+                if (!possui) {
+                    alert('Faça a assinatura do cliente no quadro antes de aplicar.');
+                    return;
+                }
+                aplicarAssinaturasNoDocumento();
+                alert('Assinatura do cliente aplicada no comprovante!');
+            });
+
+            btnLimparAssinaturaCliente.addEventListener('click', () => {
+                limparAssinatura('cliente', false);
+            });
+
+            btnUsarAssinaturaColetor.addEventListener('click', () => {
+                if (!dadosAtuais) return alert('Gere o comprovante primeiro.');
+                const possui = capturarAssinaturaDoCanvas('coletor');
+                if (!possui) {
+                    alert('Faça a assinatura do coletor no quadro antes de aplicar.');
+                    return;
+                }
+                aplicarAssinaturasNoDocumento();
+                alert('Assinatura do coletor aplicada no comprovante!');
+            });
+
+            btnLimparAssinaturaColetor.addEventListener('click', () => {
+                limparAssinatura('coletor', false);
+            });
+
             btnCompartilhar.addEventListener('click', async () => {
                 if (!dadosAtuais) return alert('Gere o comprovante primeiro.');
                 const original = btnCompartilhar.innerHTML;
@@ -379,6 +509,140 @@
                 }
             });
         });
+
+        function obterAssinaturaData(tipo) {
+            return tipo === 'cliente' ? assinaturaClienteDataURL : assinaturaColetorDataURL;
+        }
+
+        function definirAssinaturaData(tipo, valor) {
+            if (tipo === 'cliente') assinaturaClienteDataURL = valor;
+            else assinaturaColetorDataURL = valor;
+        }
+
+        function obterNomeAssinante(tipo) {
+            const input = document.getElementById(tipo === 'cliente' ? 'nome-cliente-assinatura' : 'nome-coletor-assinatura');
+            return input ? (input.value || '').trim() : '';
+        }
+
+        function inicializarAssinaturaCanvas(canvas, tipo) {
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let desenhando = false;
+
+            const prepararCanvas = () => {
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                const rect = canvas.getBoundingClientRect();
+                const snapshot = obterAssinaturaData(tipo) || null;
+                canvas.width = Math.max(320, Math.round(rect.width * ratio));
+                canvas.height = Math.round(180 * ratio);
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.scale(ratio, ratio);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, rect.width, 180);
+                ctx.lineWidth = 2.2;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = '#111111';
+                if (snapshot) {
+                    const img = new Image();
+                    img.onload = () => ctx.drawImage(img, 0, 0, rect.width, 180);
+                    img.src = snapshot;
+                }
+            };
+
+            const posicao = (evt) => {
+                const rect = canvas.getBoundingClientRect();
+                const p = evt.touches ? evt.touches[0] : evt;
+                return { x: p.clientX - rect.left, y: p.clientY - rect.top };
+            };
+
+            const iniciar = (evt) => {
+                evt.preventDefault();
+                desenhando = true;
+                const p = posicao(evt);
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+            };
+
+            const mover = (evt) => {
+                if (!desenhando) return;
+                evt.preventDefault();
+                const p = posicao(evt);
+                ctx.lineTo(p.x, p.y);
+                ctx.stroke();
+            };
+
+            const encerrar = () => {
+                if (!desenhando) return;
+                desenhando = false;
+                capturarAssinaturaDoCanvas(tipo);
+            };
+
+            canvas.addEventListener('pointerdown', iniciar);
+            canvas.addEventListener('pointermove', mover);
+            window.addEventListener('pointerup', encerrar);
+            canvas.addEventListener('touchstart', iniciar, { passive: false });
+            canvas.addEventListener('touchmove', mover, { passive: false });
+            window.addEventListener('touchend', encerrar, { passive: false });
+            window.addEventListener('resize', prepararCanvas);
+            prepararCanvas();
+        }
+
+        function capturarAssinaturaDoCanvas(tipo) {
+            const canvas = document.getElementById(tipo === 'cliente' ? 'assinatura-canvas-cliente' : 'assinatura-canvas-coletor');
+            if (!canvas) return false;
+            const ctx = canvas.getContext('2d');
+            const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            let possuiTrazo = false;
+            for (let i = 0; i < pixels.length; i += 4) {
+                if (!(pixels[i] > 245 && pixels[i+1] > 245 && pixels[i+2] > 245)) {
+                    possuiTrazo = true;
+                    break;
+                }
+            }
+            definirAssinaturaData(tipo, possuiTrazo ? canvas.toDataURL('image/png') : '');
+            return possuiTrazo;
+        }
+
+        function limparAssinatura(tipo, silencioso = false) {
+            const canvas = document.getElementById(tipo === 'cliente' ? 'assinatura-canvas-cliente' : 'assinatura-canvas-coletor');
+            if (canvas) {
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                const ctx = canvas.getContext('2d');
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.scale(ratio, ratio);
+                ctx.fillStyle = '#ffffff';
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillRect(0, 0, canvas.width / ratio, canvas.height / ratio);
+                ctx.lineWidth = 2.2;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = '#111111';
+            }
+            definirAssinaturaData(tipo, '');
+            aplicarAssinaturasNoDocumento();
+            if (!silencioso) {
+                alert(tipo === 'cliente' ? 'Assinatura do cliente limpa.' : 'Assinatura do coletor limpa.');
+            }
+        }
+
+        function renderizarBoxAssinatura(boxId, tipo, legenda) {
+            const box = document.getElementById(boxId);
+            if (!box) return;
+            const assinatura = obterAssinaturaData(tipo);
+            const nome = obterNomeAssinante(tipo);
+            box.innerHTML = `
+                ${assinatura ? `<img src="${assinatura}" alt="Assinatura" class="assinatura-imagem">` : ''}
+                <div class="linha-assinatura"></div>
+                <span class="assinatura-role">${legenda}</span>
+                <span class="assinatura-nome-preview">${nome || '&nbsp;'}</span>
+            `;
+        }
+
+        function aplicarAssinaturasNoDocumento() {
+            renderizarBoxAssinatura('assinatura-preview-cliente', 'cliente', 'Visto do Cliente');
+            renderizarBoxAssinatura('assinatura-preview-coletor', 'coletor', 'Visto do Coletor');
+        }
 
         async function gerarPDFBlob() {
             if (!window.jspdf || !window.jspdf.jsPDF) {
@@ -605,7 +869,7 @@
             });
 
             // Total + observações + assinatura nunca são cortados no meio.
-            const alturaFinal = 39;
+            const alturaFinal = 52;
             if (y + alturaFinal > pageH - margem) {
                 doc.addPage();
                 y = 15;
@@ -620,10 +884,33 @@
             ret(margem, y, largura, 18);
             y += 27;
 
-            linha(75, y, 135, y);
+            const nomeClienteAss = obterNomeAssinante('cliente');
+            const nomeColetorAss = obterNomeAssinante('coletor');
+
+            if (assinaturaClienteDataURL) {
+                try {
+                    doc.addImage(assinaturaClienteDataURL, 'PNG', 25, y - 18, 60, 16, undefined, 'FAST');
+                } catch (e) {
+                    console.warn('Não foi possível inserir a assinatura do cliente no PDF:', e);
+                }
+            }
+            if (assinaturaColetorDataURL) {
+                try {
+                    doc.addImage(assinaturaColetorDataURL, 'PNG', 125, y - 18, 60, 16, undefined, 'FAST');
+                } catch (e) {
+                    console.warn('Não foi possível inserir a assinatura do coletor no PDF:', e);
+                }
+            }
+            linha(25, y, 85, y);
+            linha(125, y, 185, y);
             doc.setFont('helvetica','normal');
             doc.setFontSize(7.5);
-            doc.text('Visto do Cliente', 105, y + 5, {align:'center'});
+            doc.text('Visto do Cliente', 55, y + 5, {align:'center'});
+            doc.text('Visto do Coletor', 155, y + 5, {align:'center'});
+            doc.setFont('helvetica','bold');
+            doc.setFontSize(7);
+            doc.text(txt(nomeClienteAss || ' '), 55, y + 10, {align:'center'});
+            doc.text(txt(nomeColetorAss || ' '), 155, y + 10, {align:'center'});
 
             return {
                 blob: doc.output('blob'),
@@ -962,12 +1249,11 @@
                 <div class="obs-box"></div>
 
                 <div class="assinaturas">
-                    <div class="assinatura-box">
-                        <div class="linha-assinatura"></div>
-                        Visto do Cliente
-                    </div>
+                    <div class="assinatura-box" id="assinatura-preview-cliente"></div>
+                    <div class="assinatura-box" id="assinatura-preview-coletor"></div>
                 </div>
             `;
+            aplicarAssinaturasNoDocumento();
         }
 
         function exibirFeedback(dados) {

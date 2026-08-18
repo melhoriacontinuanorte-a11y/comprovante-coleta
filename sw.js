@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coleta-alterosa-v5';
+const CACHE_NAME = 'coleta-alterosa-v8';
 
 const APP_ASSETS = [
   './',
@@ -19,11 +19,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
-      )
+      Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))
     ).then(() => self.clients.claim())
   );
 });
@@ -31,23 +27,31 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
+  // Para navegação/HTML, prioriza a internet para receber atualizações imediatamente.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put('./index.html', copy));
+          return response;
+        })
+        .catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        const copia = response.clone();
-
+    caches.match(event.request).then(cached => {
+      const networkFetch = fetch(event.request).then(response => {
         if (event.request.url.startsWith(self.location.origin)) {
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, copia);
-          });
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
         }
-
         return response;
-      })
-      .catch(() =>
-        caches.match(event.request).then(cached =>
-          cached || caches.match('./index.html')
-        )
-      )
+      }).catch(() => cached);
+
+      return cached || networkFetch;
+    })
   );
 });
