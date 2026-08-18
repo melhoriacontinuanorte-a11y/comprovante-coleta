@@ -221,7 +221,7 @@
 <body>
 
     <div id="app-container">
-        <div style="text-align:right;font-size:11px;color:#888;margin-bottom:4px;">Versão 11.0</div>
+        <div style="text-align:right;font-size:11px;color:#888;margin-bottom:4px;">Versão 12.0</div>
         <h1>Gerador de Comprovante de Coleta</h1>
         <p class="instrucao">Cole abaixo o texto bruto do comprovante. O sistema extrai os dados, gera o PDF e permite compartilhar o comprovante pelo menu nativo do tablet.</p>
         <div id="pwa-status"></div>
@@ -1130,22 +1130,35 @@
             // 2. PARSER AVANÇADO E BLINDADO DE PNEUS
             // ==========================================
 
-            // Isola SOMENTE a tabela de pneus.
-            // Isso é essencial porque números de sequência podem existir no cabeçalho.
-            // Exemplo real: "ROD MG 050 KM..." fazia o item 050 ser confundido com a rodovia.
+            // Isola SOMENTE a tabela correta de pneus.
+            // Alguns textos copiados podem trazer um pedaço da tabela ANTES do comprovante completo.
+            // Exemplo: itens 001/002 aparecem soltos e depois a tabela completa começa novamente.
             let tableText = textoVia1;
 
-            // Primeiro localiza o item 001 no INÍCIO de uma linha.
-            // A partir daqui, filial/endereço/CEP deixam de participar do parser dos pneus.
-            const matchInicioTabela = tableText.match(/^\s*001\s+/m);
-            if (matchInicioTabela) {
-                tableText = tableText.substring(matchInicioTabela.index);
-            }
-
-            // Encerra somente na frase específica de quantidade total.
+            // Primeiro corta tudo após a quantidade total para limitar a área de busca.
             const matchFimPneus = tableText.match(/Quantidade\s+total\s+de\s+pneus\s*:/i);
             if (matchFimPneus) {
                 tableText = tableText.substring(0, matchFimPneus.index);
+            }
+
+            // Preferência 1: usa a ÚLTIMA ocorrência do cabeçalho completo da tabela.
+            // Isso ignora fragmentos de linhas que possam ter sido copiados antes do comprovante.
+            const cabecalhosTabela = [...tableText.matchAll(/^\s*#?\s*Marca\s+Modelo\s+Desenho\s*$/gmi)];
+            if (cabecalhosTabela.length > 0) {
+                const ultimoCabecalho = cabecalhosTabela[cabecalhosTabela.length - 1];
+                const trechoAposCabecalho = tableText.substring(ultimoCabecalho.index + ultimoCabecalho[0].length);
+                const inicio001 = trechoAposCabecalho.match(/^\s*001\s+/m);
+                if (inicio001) {
+                    tableText = trechoAposCabecalho.substring(inicio001.index);
+                }
+            } else {
+                // Fallback: se não houver cabeçalho, usa a ÚLTIMA ocorrência do item 001.
+                // Isso também protege contra fragmentos duplicados no início do texto.
+                const inicios001 = [...tableText.matchAll(/^\s*001\s+/gm)];
+                if (inicios001.length > 0) {
+                    const ultimo001 = inicios001[inicios001.length - 1];
+                    tableText = tableText.substring(ultimo001.index);
+                }
             }
 
             let seq = 1;
