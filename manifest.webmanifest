@@ -1,12 +1,13 @@
 {
   "name": "Comprovante de Coleta - Alterosa Pneus",
   "short_name": "Coleta Alterosa",
-  "description": "Geração e compartilhamento de comprovantes de coleta de pneus.",
-  "start_url": "./index.html",
+  "description": "Gerador e compartilhamento de comprovantes de coleta de pneus.",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f4f7f6",
-  "theme_color": "#2c3e50",
+  "background_color": "#ffffff",
+  "theme_color": "#e7192d",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "icon-192.png",

@@ -46,13 +46,3 @@ Ao tocar em **COMPARTILHAR**, a mensagem da coleta é copiada automaticamente. N
 ## Botão COPIAR TEXTO
 
 Depois de gerar o comprovante, use **📋 COPIAR TEXTO** para copiar a mensagem breve da coleta. No WhatsApp, ao compartilhar o PDF, toque em **Adicione uma legenda...** e escolha **Colar**.
-
-
-## V5 - correção para coletas grandes
-
-- Corrigido deslocamento das colunas quando o serviço vinha como `RECAPE (`.
-- O token vazio gerado pelo `(` agora é removido antes da leitura de Serviço/Fogo/Medida.
-- CEP/Cidade/UF passam a ser lidos da área do cliente, e não da filial.
-- PDF deixou de ser uma imagem alta cortada em páginas.
-- A tabela agora é desenhada diretamente pelo jsPDF, com quebra de página controlada e cabeçalho repetido.
-- Testado para suportar coletas com 60+ pneus sem corrupção na linha 50.
