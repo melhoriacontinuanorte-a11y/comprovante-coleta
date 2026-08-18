@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coleta-alterosa-v8';
+const CACHE_NAME = 'coleta-alterosa-v11';
 
 const APP_ASSETS = [
   './',

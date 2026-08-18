@@ -157,8 +157,8 @@
         }
         #assinatura-container h3 { color: var(--primary-color); margin-bottom: 6px; font-size: 18px; }
         #assinatura-container p { color: #666; margin-bottom: 12px; font-size: 13px; }
-        .assinatura-pad-wrap { border: 2px dashed #bbb; border-radius: 8px; background: #fff; overflow: hidden; }
-        #assinatura-canvas { width: 100%; height: 180px; display: block; background: #fff; touch-action: none; cursor: crosshair; }
+        .assinatura-pad-wrap { width: 100%; border: 2px dashed #bbb; border-radius: 8px; background: #fff; overflow: hidden; }
+        .assinatura-canvas { width: 100%; height: 220px; display: block; background: #fff; touch-action: none; cursor: crosshair; user-select: none; -webkit-user-select: none; }
         .assinatura-botoes { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
         #btn-limpar-assinatura { background-color: #c0392b; }
         #btn-limpar-assinatura:hover { background-color: #a93226; }
@@ -168,7 +168,7 @@
         .assinatura-imagem { display: block; max-width: 100%; max-height: 54px; margin: 0 auto 6px auto; object-fit: contain; }
 
 
-        .assinatura-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .assinatura-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
         .assinatura-card {
             border: 1px solid #ddd; border-radius: 8px; background: #fff; padding: 14px;
             box-shadow: 0 1px 4px rgba(0,0,0,0.05);
@@ -176,10 +176,29 @@
         .assinatura-card h4 { color: var(--primary-color); margin-bottom: 10px; font-size: 16px; }
         .assinatura-label { display: block; font-size: 13px; font-weight: bold; color: #555; margin-bottom: 6px; }
         .assinatura-input {
-            width: 100%; padding: 10px 12px; border: 1px solid #cfcfcf; border-radius: 6px;
-            font-size: 14px; margin-bottom: 12px;
+            width: 100%;
+            min-height: 48px;
+            padding: 12px 14px;
+            border: 1px solid #cfcfcf;
+            border-radius: 6px;
+            font-size: 16px;
+            line-height: 1.25;
+            margin-bottom: 12px;
+            color: #222;
+            background: #fff;
+            display: block;
+            appearance: none;
+            -webkit-appearance: none;
         }
-        .assinatura-input:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 2px rgba(52,152,219,0.15); }
+        .assinatura-input::placeholder {
+            color: #888;
+            line-height: 1.25;
+        }
+        .assinatura-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52,152,219,0.15);
+        }
         .assinatura-subtexto { font-size: 12px; color: #666; margin: -4px 0 10px 0; }
         .assinatura-role { display:block; margin-top: 5px; font-size: 12px; }
         .assinatura-nome-preview { display:block; margin-top: 3px; font-size: 12px; font-weight: bold; min-height: 16px; }
@@ -202,7 +221,7 @@
 <body>
 
     <div id="app-container">
-        <div style="text-align:right;font-size:11px;color:#888;margin-bottom:4px;">Versão 8.0</div>
+        <div style="text-align:right;font-size:11px;color:#888;margin-bottom:4px;">Versão 11.0</div>
         <h1>Gerador de Comprovante de Coleta</h1>
         <p class="instrucao">Cole abaixo o texto bruto do comprovante. O sistema extrai os dados, gera o PDF e permite compartilhar o comprovante pelo menu nativo do tablet.</p>
         <div id="pwa-status"></div>
@@ -226,7 +245,7 @@
 
         <div id="assinatura-container">
             <h3>✍️ Assinaturas</h3>
-            <p>Preencha os nomes e peça para o cliente e o coletor assinarem no tablet. Depois aplique as assinaturas no comprovante. As duas assinaturas irão para o preview, PDF e comprovante final.</p>
+            <p>Preencha os nomes e peça para o cliente e o coletor assinarem no tablet. As áreas de assinatura agora ficam uma abaixo da outra para facilitar no tablet. Depois aplique as assinaturas no comprovante. As duas assinaturas irão para o preview, PDF e comprovante final.</p>
             <div class="assinatura-grid">
                 <div class="assinatura-card">
                     <h4>Cliente</h4>
@@ -234,7 +253,7 @@
                     <input type="text" id="nome-cliente-assinatura" class="assinatura-input" placeholder="Digite o nome do cliente">
                     <div class="assinatura-subtexto">Assinatura do cliente</div>
                     <div class="assinatura-pad-wrap">
-                        <canvas id="assinatura-canvas-cliente"></canvas>
+                        <canvas id="assinatura-canvas-cliente" class="assinatura-canvas"></canvas>
                     </div>
                     <div class="assinatura-botoes">
                         <button id="btn-usar-assinatura-cliente">✅ USAR ASSINATURA DO CLIENTE</button>
@@ -247,7 +266,7 @@
                     <input type="text" id="nome-coletor-assinatura" class="assinatura-input" placeholder="Digite o nome do coletor">
                     <div class="assinatura-subtexto">Assinatura do coletor / motorista</div>
                     <div class="assinatura-pad-wrap">
-                        <canvas id="assinatura-canvas-coletor"></canvas>
+                        <canvas id="assinatura-canvas-coletor" class="assinatura-canvas"></canvas>
                     </div>
                     <div class="assinatura-botoes">
                         <button id="btn-usar-assinatura-coletor">✅ USAR ASSINATURA DO COLETOR</button>
@@ -394,6 +413,10 @@
                 assinaturaContainer.style.display = 'block';
                 nomeClienteAssinaturaInput.value = dadosExtraidos.coleta.clienteNome && dadosExtraidos.coleta.clienteNome !== '—' ? dadosExtraidos.coleta.clienteNome : '';
                 if (!nomeColetorAssinaturaInput.value) nomeColetorAssinaturaInput.value = '';
+                requestAnimationFrame(() => {
+                    if (assinaturaCanvasCliente._prepararAssinatura) assinaturaCanvasCliente._prepararAssinatura();
+                    if (assinaturaCanvasColetor._prepararAssinatura) assinaturaCanvasColetor._prepararAssinatura();
+                });
                 aplicarAssinaturasNoDocumento();
                 acoesResultado.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
@@ -528,64 +551,117 @@
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             let desenhando = false;
+            let pointerAtivo = null;
+            let ultimaLargura = 0;
 
-            const prepararCanvas = () => {
-                const ratio = Math.max(window.devicePixelRatio || 1, 1);
-                const rect = canvas.getBoundingClientRect();
-                const snapshot = obterAssinaturaData(tipo) || null;
-                canvas.width = Math.max(320, Math.round(rect.width * ratio));
-                canvas.height = Math.round(180 * ratio);
+            const configurarPincel = (ratio) => {
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
                 ctx.scale(ratio, ratio);
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, rect.width, 180);
                 ctx.lineWidth = 2.2;
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
                 ctx.strokeStyle = '#111111';
+            };
+
+            const prepararCanvas = (forcar = false) => {
+                const rect = canvas.getBoundingClientRect();
+                const cssWidth = Math.round(rect.width);
+
+                // Quando o bloco está oculto, ainda não existe uma largura confiável.
+                if (cssWidth < 50) return;
+
+                // A barra do navegador pode disparar resize continuamente no tablet.
+                // Só recriamos o canvas se a largura realmente mudou.
+                if (!forcar && ultimaLargura && Math.abs(cssWidth - ultimaLargura) < 8) return;
+
+                const snapshot = obterAssinaturaData(tipo) || null;
+                const ratio = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
+                ultimaLargura = cssWidth;
+
+                canvas.width = Math.round(cssWidth * ratio);
+                canvas.height = Math.round(220 * ratio);
+                canvas._assinaturaRatio = ratio;
+
+                configurarPincel(ratio);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, cssWidth, 220);
+
                 if (snapshot) {
                     const img = new Image();
-                    img.onload = () => ctx.drawImage(img, 0, 0, rect.width, 180);
+                    img.onload = () => {
+                        configurarPincel(ratio);
+                        ctx.drawImage(img, 0, 0, cssWidth, 220);
+                    };
                     img.src = snapshot;
                 }
             };
 
+            canvas._prepararAssinatura = () => prepararCanvas(true);
+
             const posicao = (evt) => {
                 const rect = canvas.getBoundingClientRect();
-                const p = evt.touches ? evt.touches[0] : evt;
-                return { x: p.clientX - rect.left, y: p.clientY - rect.top };
+                return {
+                    x: evt.clientX - rect.left,
+                    y: evt.clientY - rect.top
+                };
             };
 
             const iniciar = (evt) => {
+                if (evt.pointerType === 'mouse' && evt.button !== 0) return;
                 evt.preventDefault();
+
+                prepararCanvas(false);
                 desenhando = true;
+                pointerAtivo = evt.pointerId;
+
+                try { canvas.setPointerCapture(evt.pointerId); } catch (_) {}
+
                 const p = posicao(evt);
                 ctx.beginPath();
                 ctx.moveTo(p.x, p.y);
             };
 
             const mover = (evt) => {
-                if (!desenhando) return;
+                if (!desenhando || evt.pointerId !== pointerAtivo) return;
                 evt.preventDefault();
                 const p = posicao(evt);
+
+                // Ignora coordenadas fora do quadro para evitar linhas gigantes.
+                const rect = canvas.getBoundingClientRect();
+                if (p.x < 0 || p.y < 0 || p.x > rect.width || p.y > rect.height) return;
+
                 ctx.lineTo(p.x, p.y);
                 ctx.stroke();
             };
 
-            const encerrar = () => {
+            const encerrar = (evt) => {
                 if (!desenhando) return;
+                if (evt && pointerAtivo !== null && evt.pointerId !== pointerAtivo) return;
+
                 desenhando = false;
+                if (pointerAtivo !== null) {
+                    try { canvas.releasePointerCapture(pointerAtivo); } catch (_) {}
+                }
+                pointerAtivo = null;
                 capturarAssinaturaDoCanvas(tipo);
             };
 
             canvas.addEventListener('pointerdown', iniciar);
             canvas.addEventListener('pointermove', mover);
-            window.addEventListener('pointerup', encerrar);
-            canvas.addEventListener('touchstart', iniciar, { passive: false });
-            canvas.addEventListener('touchmove', mover, { passive: false });
-            window.addEventListener('touchend', encerrar, { passive: false });
-            window.addEventListener('resize', prepararCanvas);
-            prepararCanvas();
+            canvas.addEventListener('pointerup', encerrar);
+            canvas.addEventListener('pointercancel', encerrar);
+            canvas.addEventListener('lostpointercapture', () => {
+                if (desenhando) encerrar();
+            });
+
+            let resizeTimer = null;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => prepararCanvas(false), 180);
+            });
+
+            // A inicialização pode acontecer enquanto a área está oculta.
+            requestAnimationFrame(() => prepararCanvas(false));
         }
 
         function capturarAssinaturaDoCanvas(tipo) {
@@ -607,12 +683,12 @@
         function limparAssinatura(tipo, silencioso = false) {
             const canvas = document.getElementById(tipo === 'cliente' ? 'assinatura-canvas-cliente' : 'assinatura-canvas-coletor');
             if (canvas) {
-                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                const ratio = canvas._assinaturaRatio || Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
                 const ctx = canvas.getContext('2d');
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.scale(ratio, ratio);
                 ctx.fillStyle = '#ffffff';
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.fillRect(0, 0, canvas.width / ratio, canvas.height / ratio);
                 ctx.lineWidth = 2.2;
                 ctx.lineCap = 'round';
