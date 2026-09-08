@@ -146,66 +146,6 @@
         .assinatura-box { text-align: center; width: 40%; font-size: 12px; }
         .linha-assinatura { border-top: 1px solid #000; margin-bottom: 5px; }
 
-
-        #assinatura-container {
-            display: none;
-            margin: 20px 0 25px;
-            padding: 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background: #fafafa;
-        }
-        #assinatura-container h3 { color: var(--primary-color); margin-bottom: 6px; font-size: 18px; }
-        #assinatura-container p { color: #666; margin-bottom: 12px; font-size: 13px; }
-        .assinatura-pad-wrap { width: 100%; border: 2px dashed #bbb; border-radius: 8px; background: #fff; overflow: hidden; }
-        .assinatura-canvas { width: 100%; height: 220px; display: block; background: #fff; touch-action: none; cursor: crosshair; user-select: none; -webkit-user-select: none; }
-        .assinatura-botoes { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
-        #btn-limpar-assinatura { background-color: #c0392b; }
-        #btn-limpar-assinatura:hover { background-color: #a93226; }
-        #btn-usar-assinatura { background-color: #2980b9; }
-        #btn-usar-assinatura:hover { background-color: #2471a3; }
-        .assinatura-box { position: relative; min-height: 88px; }
-        .assinatura-imagem { display: block; max-width: 100%; max-height: 54px; margin: 0 auto 6px auto; object-fit: contain; }
-
-
-        .assinatura-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
-        .assinatura-card {
-            border: 1px solid #ddd; border-radius: 8px; background: #fff; padding: 14px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-        }
-        .assinatura-card h4 { color: var(--primary-color); margin-bottom: 10px; font-size: 16px; }
-        .assinatura-label { display: block; font-size: 13px; font-weight: bold; color: #555; margin-bottom: 6px; }
-        .assinatura-input {
-            width: 100%;
-            min-height: 48px;
-            padding: 12px 14px;
-            border: 1px solid #cfcfcf;
-            border-radius: 6px;
-            font-size: 16px;
-            line-height: 1.25;
-            margin-bottom: 12px;
-            color: #222;
-            background: #fff;
-            display: block;
-            appearance: none;
-            -webkit-appearance: none;
-        }
-        .assinatura-input::placeholder {
-            color: #888;
-            line-height: 1.25;
-        }
-        .assinatura-input:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 2px rgba(52,152,219,0.15);
-        }
-        .assinatura-subtexto { font-size: 12px; color: #666; margin: -4px 0 10px 0; }
-        .assinatura-role { display:block; margin-top: 5px; font-size: 12px; }
-        .assinatura-nome-preview { display:block; margin-top: 3px; font-size: 12px; font-weight: bold; min-height: 16px; }
-        @media (max-width: 700px) {
-            .assinatura-grid { grid-template-columns: 1fr; }
-        }
-
         /* ==========================================================================
            CONFIGURAÇÕES DE IMPRESSÃO NATIVA DO NAVEGADOR
            ========================================================================== */
@@ -221,7 +161,7 @@
 <body>
 
     <div id="app-container">
-        <div style="text-align:right;font-size:11px;color:#888;margin-bottom:4px;">Versão 13.0</div>
+        <div style="text-align:right;font-size:11px;color:#888;margin-bottom:4px;">Versão 6.2</div>
         <h1>Gerador de Comprovante de Coleta</h1>
         <p class="instrucao">Cole abaixo o texto bruto do comprovante. O sistema extrai os dados, gera o PDF e permite compartilhar o comprovante pelo menu nativo do tablet.</p>
         <div id="pwa-status"></div>
@@ -243,39 +183,6 @@
             <button id="btn-compartilhar">📤 COMPARTILHAR</button>
         </div>
 
-        <div id="assinatura-container">
-            <h3>✍️ Assinaturas</h3>
-            <p>Preencha os nomes e peça para o cliente e o coletor assinarem no tablet. As áreas de assinatura agora ficam uma abaixo da outra para facilitar no tablet. Depois aplique as assinaturas no comprovante. As duas assinaturas irão para o preview, PDF e comprovante final.</p>
-            <div class="assinatura-grid">
-                <div class="assinatura-card">
-                    <h4>Cliente</h4>
-                    <label class="assinatura-label" for="nome-cliente-assinatura">Nome do Cliente</label>
-                    <input type="text" id="nome-cliente-assinatura" class="assinatura-input" placeholder="Digite o nome do cliente">
-                    <div class="assinatura-subtexto">Assinatura do cliente</div>
-                    <div class="assinatura-pad-wrap">
-                        <canvas id="assinatura-canvas-cliente" class="assinatura-canvas"></canvas>
-                    </div>
-                    <div class="assinatura-botoes">
-                        <button id="btn-usar-assinatura-cliente">✅ USAR ASSINATURA DO CLIENTE</button>
-                        <button id="btn-limpar-assinatura-cliente">🗑️ LIMPAR</button>
-                    </div>
-                </div>
-                <div class="assinatura-card">
-                    <h4>Coletor / Motorista</h4>
-                    <label class="assinatura-label" for="nome-coletor-assinatura">Nome do Coletor</label>
-                    <input type="text" id="nome-coletor-assinatura" class="assinatura-input" placeholder="Digite o nome do coletor">
-                    <div class="assinatura-subtexto">Assinatura do coletor / motorista</div>
-                    <div class="assinatura-pad-wrap">
-                        <canvas id="assinatura-canvas-coletor" class="assinatura-canvas"></canvas>
-                    </div>
-                    <div class="assinatura-botoes">
-                        <button id="btn-usar-assinatura-coletor">✅ USAR ASSINATURA DO COLETOR</button>
-                        <button id="btn-limpar-assinatura-coletor">🗑️ LIMPAR</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div id="preview-wrapper">
             <div id="documento-final"></div>
         </div>
@@ -285,8 +192,6 @@
         let numeroColetaAtual = "comprovante"; 
 
         let dadosAtuais = null;
-        let assinaturaClienteDataURL = '';
-        let assinaturaColetorDataURL = '';
         let deferredInstallPrompt = null;
 
         function atualizarOfertaInstalacao(disponivel) {
@@ -338,19 +243,7 @@
             const docFinal = document.getElementById('documento-final');
             const previewWrapper = document.getElementById('preview-wrapper');
             const acoesResultado = document.getElementById('acoes-resultado');
-            const assinaturaContainer = document.getElementById('assinatura-container');
-            const assinaturaCanvasCliente = document.getElementById('assinatura-canvas-cliente');
-            const assinaturaCanvasColetor = document.getElementById('assinatura-canvas-coletor');
-            const btnUsarAssinaturaCliente = document.getElementById('btn-usar-assinatura-cliente');
-            const btnLimparAssinaturaCliente = document.getElementById('btn-limpar-assinatura-cliente');
-            const btnUsarAssinaturaColetor = document.getElementById('btn-usar-assinatura-coletor');
-            const btnLimparAssinaturaColetor = document.getElementById('btn-limpar-assinatura-coletor');
-            const nomeClienteAssinaturaInput = document.getElementById('nome-cliente-assinatura');
-            const nomeColetorAssinaturaInput = document.getElementById('nome-coletor-assinatura');
             const pwaStatus = document.getElementById('pwa-status');
-
-            inicializarAssinaturaCanvas(assinaturaCanvasCliente, 'cliente');
-            inicializarAssinaturaCanvas(assinaturaCanvasColetor, 'coletor');
 
             if (location.protocol === 'file:') {
                 pwaStatus.textContent = 'Para instalar o app e compartilhar o PDF diretamente, publique esta pasta em HTTPS. Abrir o arquivo diretamente ainda permite testar geração e download.';
@@ -382,13 +275,8 @@
                 feedbackContainer.style.display = 'none';
                 previewWrapper.style.display = 'none';
                 acoesResultado.style.display = 'none';
-                assinaturaContainer.style.display = 'none';
                 docFinal.innerHTML = '';
                 dadosAtuais = null;
-                nomeClienteAssinaturaInput.value = '';
-                nomeColetorAssinaturaInput.value = '';
-                limparAssinatura('cliente', true);
-                limparAssinatura('coletor', true);
             });
 
             btnGerar.addEventListener('click', () => {
@@ -410,14 +298,6 @@
                 exibirFeedback(dadosExtraidos);
                 previewWrapper.style.display = 'block';
                 acoesResultado.style.display = 'flex';
-                assinaturaContainer.style.display = 'block';
-                nomeClienteAssinaturaInput.value = dadosExtraidos.coleta.clienteNome && dadosExtraidos.coleta.clienteNome !== '—' ? dadosExtraidos.coleta.clienteNome : '';
-                if (!nomeColetorAssinaturaInput.value) nomeColetorAssinaturaInput.value = '';
-                requestAnimationFrame(() => {
-                    if (assinaturaCanvasCliente._prepararAssinatura) assinaturaCanvasCliente._prepararAssinatura();
-                    if (assinaturaCanvasColetor._prepararAssinatura) assinaturaCanvasColetor._prepararAssinatura();
-                });
-                aplicarAssinaturasNoDocumento();
                 acoesResultado.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
 
@@ -464,39 +344,6 @@
                 }
             });
 
-            nomeClienteAssinaturaInput.addEventListener('input', aplicarAssinaturasNoDocumento);
-            nomeColetorAssinaturaInput.addEventListener('input', aplicarAssinaturasNoDocumento);
-
-            btnUsarAssinaturaCliente.addEventListener('click', () => {
-                if (!dadosAtuais) return alert('Gere o comprovante primeiro.');
-                const possui = capturarAssinaturaDoCanvas('cliente');
-                if (!possui) {
-                    alert('Faça a assinatura do cliente no quadro antes de aplicar.');
-                    return;
-                }
-                aplicarAssinaturasNoDocumento();
-                alert('Assinatura do cliente aplicada no comprovante!');
-            });
-
-            btnLimparAssinaturaCliente.addEventListener('click', () => {
-                limparAssinatura('cliente', false);
-            });
-
-            btnUsarAssinaturaColetor.addEventListener('click', () => {
-                if (!dadosAtuais) return alert('Gere o comprovante primeiro.');
-                const possui = capturarAssinaturaDoCanvas('coletor');
-                if (!possui) {
-                    alert('Faça a assinatura do coletor no quadro antes de aplicar.');
-                    return;
-                }
-                aplicarAssinaturasNoDocumento();
-                alert('Assinatura do coletor aplicada no comprovante!');
-            });
-
-            btnLimparAssinaturaColetor.addEventListener('click', () => {
-                limparAssinatura('coletor', false);
-            });
-
             btnCompartilhar.addEventListener('click', async () => {
                 if (!dadosAtuais) return alert('Gere o comprovante primeiro.');
                 const original = btnCompartilhar.innerHTML;
@@ -532,193 +379,6 @@
                 }
             });
         });
-
-        function obterAssinaturaData(tipo) {
-            return tipo === 'cliente' ? assinaturaClienteDataURL : assinaturaColetorDataURL;
-        }
-
-        function definirAssinaturaData(tipo, valor) {
-            if (tipo === 'cliente') assinaturaClienteDataURL = valor;
-            else assinaturaColetorDataURL = valor;
-        }
-
-        function obterNomeAssinante(tipo) {
-            const input = document.getElementById(tipo === 'cliente' ? 'nome-cliente-assinatura' : 'nome-coletor-assinatura');
-            return input ? (input.value || '').trim() : '';
-        }
-
-        function inicializarAssinaturaCanvas(canvas, tipo) {
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            let desenhando = false;
-            let pointerAtivo = null;
-            let ultimaLargura = 0;
-
-            const configurarPincel = (ratio) => {
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.scale(ratio, ratio);
-                ctx.lineWidth = 2.2;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.strokeStyle = '#111111';
-            };
-
-            const prepararCanvas = (forcar = false) => {
-                const rect = canvas.getBoundingClientRect();
-                const cssWidth = Math.round(rect.width);
-
-                // Quando o bloco está oculto, ainda não existe uma largura confiável.
-                if (cssWidth < 50) return;
-
-                // A barra do navegador pode disparar resize continuamente no tablet.
-                // Só recriamos o canvas se a largura realmente mudou.
-                if (!forcar && ultimaLargura && Math.abs(cssWidth - ultimaLargura) < 8) return;
-
-                const snapshot = obterAssinaturaData(tipo) || null;
-                const ratio = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
-                ultimaLargura = cssWidth;
-
-                canvas.width = Math.round(cssWidth * ratio);
-                canvas.height = Math.round(220 * ratio);
-                canvas._assinaturaRatio = ratio;
-
-                configurarPincel(ratio);
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, cssWidth, 220);
-
-                if (snapshot) {
-                    const img = new Image();
-                    img.onload = () => {
-                        configurarPincel(ratio);
-                        ctx.drawImage(img, 0, 0, cssWidth, 220);
-                    };
-                    img.src = snapshot;
-                }
-            };
-
-            canvas._prepararAssinatura = () => prepararCanvas(true);
-
-            const posicao = (evt) => {
-                const rect = canvas.getBoundingClientRect();
-                return {
-                    x: evt.clientX - rect.left,
-                    y: evt.clientY - rect.top
-                };
-            };
-
-            const iniciar = (evt) => {
-                if (evt.pointerType === 'mouse' && evt.button !== 0) return;
-                evt.preventDefault();
-
-                prepararCanvas(false);
-                desenhando = true;
-                pointerAtivo = evt.pointerId;
-
-                try { canvas.setPointerCapture(evt.pointerId); } catch (_) {}
-
-                const p = posicao(evt);
-                ctx.beginPath();
-                ctx.moveTo(p.x, p.y);
-            };
-
-            const mover = (evt) => {
-                if (!desenhando || evt.pointerId !== pointerAtivo) return;
-                evt.preventDefault();
-                const p = posicao(evt);
-
-                // Ignora coordenadas fora do quadro para evitar linhas gigantes.
-                const rect = canvas.getBoundingClientRect();
-                if (p.x < 0 || p.y < 0 || p.x > rect.width || p.y > rect.height) return;
-
-                ctx.lineTo(p.x, p.y);
-                ctx.stroke();
-            };
-
-            const encerrar = (evt) => {
-                if (!desenhando) return;
-                if (evt && pointerAtivo !== null && evt.pointerId !== pointerAtivo) return;
-
-                desenhando = false;
-                if (pointerAtivo !== null) {
-                    try { canvas.releasePointerCapture(pointerAtivo); } catch (_) {}
-                }
-                pointerAtivo = null;
-                capturarAssinaturaDoCanvas(tipo);
-            };
-
-            canvas.addEventListener('pointerdown', iniciar);
-            canvas.addEventListener('pointermove', mover);
-            canvas.addEventListener('pointerup', encerrar);
-            canvas.addEventListener('pointercancel', encerrar);
-            canvas.addEventListener('lostpointercapture', () => {
-                if (desenhando) encerrar();
-            });
-
-            let resizeTimer = null;
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(() => prepararCanvas(false), 180);
-            });
-
-            // A inicialização pode acontecer enquanto a área está oculta.
-            requestAnimationFrame(() => prepararCanvas(false));
-        }
-
-        function capturarAssinaturaDoCanvas(tipo) {
-            const canvas = document.getElementById(tipo === 'cliente' ? 'assinatura-canvas-cliente' : 'assinatura-canvas-coletor');
-            if (!canvas) return false;
-            const ctx = canvas.getContext('2d');
-            const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-            let possuiTrazo = false;
-            for (let i = 0; i < pixels.length; i += 4) {
-                if (!(pixels[i] > 245 && pixels[i+1] > 245 && pixels[i+2] > 245)) {
-                    possuiTrazo = true;
-                    break;
-                }
-            }
-            definirAssinaturaData(tipo, possuiTrazo ? canvas.toDataURL('image/png') : '');
-            return possuiTrazo;
-        }
-
-        function limparAssinatura(tipo, silencioso = false) {
-            const canvas = document.getElementById(tipo === 'cliente' ? 'assinatura-canvas-cliente' : 'assinatura-canvas-coletor');
-            if (canvas) {
-                const ratio = canvas._assinaturaRatio || Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
-                const ctx = canvas.getContext('2d');
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.scale(ratio, ratio);
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, canvas.width / ratio, canvas.height / ratio);
-                ctx.lineWidth = 2.2;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.strokeStyle = '#111111';
-            }
-            definirAssinaturaData(tipo, '');
-            aplicarAssinaturasNoDocumento();
-            if (!silencioso) {
-                alert(tipo === 'cliente' ? 'Assinatura do cliente limpa.' : 'Assinatura do coletor limpa.');
-            }
-        }
-
-        function renderizarBoxAssinatura(boxId, tipo, legenda) {
-            const box = document.getElementById(boxId);
-            if (!box) return;
-            const assinatura = obterAssinaturaData(tipo);
-            const nome = obterNomeAssinante(tipo);
-            box.innerHTML = `
-                ${assinatura ? `<img src="${assinatura}" alt="Assinatura" class="assinatura-imagem">` : ''}
-                <div class="linha-assinatura"></div>
-                <span class="assinatura-role">${legenda}</span>
-                <span class="assinatura-nome-preview">${nome || '&nbsp;'}</span>
-            `;
-        }
-
-        function aplicarAssinaturasNoDocumento() {
-            renderizarBoxAssinatura('assinatura-preview-cliente', 'cliente', 'Visto do Cliente');
-            renderizarBoxAssinatura('assinatura-preview-coletor', 'coletor', 'Visto do Coletor');
-        }
 
         async function gerarPDFBlob() {
             if (!window.jspdf || !window.jspdf.jsPDF) {
@@ -945,7 +605,7 @@
             });
 
             // Total + observações + assinatura nunca são cortados no meio.
-            const alturaFinal = 52;
+            const alturaFinal = 39;
             if (y + alturaFinal > pageH - margem) {
                 doc.addPage();
                 y = 15;
@@ -960,33 +620,10 @@
             ret(margem, y, largura, 18);
             y += 27;
 
-            const nomeClienteAss = obterNomeAssinante('cliente');
-            const nomeColetorAss = obterNomeAssinante('coletor');
-
-            if (assinaturaClienteDataURL) {
-                try {
-                    doc.addImage(assinaturaClienteDataURL, 'PNG', 25, y - 18, 60, 16, undefined, 'FAST');
-                } catch (e) {
-                    console.warn('Não foi possível inserir a assinatura do cliente no PDF:', e);
-                }
-            }
-            if (assinaturaColetorDataURL) {
-                try {
-                    doc.addImage(assinaturaColetorDataURL, 'PNG', 125, y - 18, 60, 16, undefined, 'FAST');
-                } catch (e) {
-                    console.warn('Não foi possível inserir a assinatura do coletor no PDF:', e);
-                }
-            }
-            linha(25, y, 85, y);
-            linha(125, y, 185, y);
+            linha(75, y, 135, y);
             doc.setFont('helvetica','normal');
             doc.setFontSize(7.5);
-            doc.text('Visto do Cliente', 55, y + 5, {align:'center'});
-            doc.text('Visto do Coletor', 155, y + 5, {align:'center'});
-            doc.setFont('helvetica','bold');
-            doc.setFontSize(7);
-            doc.text(txt(nomeClienteAss || ' '), 55, y + 10, {align:'center'});
-            doc.text(txt(nomeColetorAss || ' '), 155, y + 10, {align:'center'});
+            doc.text('Visto do Cliente', 105, y + 5, {align:'center'});
 
             return {
                 blob: doc.output('blob'),
@@ -1070,29 +707,11 @@
             // 1. DADOS DE CABEÇALHO E CLIENTE
             // ==========================================
 
-            // Filial com quebras de linha preservadas.
-            // Alguns textos copiados podem trazer um fragmento da tabela de pneus ANTES do cabeçalho.
-            // Ex.: "Medida / N.Fogo / Serviço / 001 ... / 002 ...". Nesse caso, usamos apenas
-            // as ÚLTIMAS linhas válidas antes de "COMPROVANTE DE COLETA", descartando linhas da tabela.
+            // Filial com quebras de linha preservadas
             const matchFilialOriginal = texto.match(/^([\s\S]*?)(?=COMPROVANTE DE COLETA)/i);
             if (matchFilialOriginal) {
-                const linhasBrutas = matchFilialOriginal[1]
-                    .split(/\r?\n/)
-                    .map(l => l.trim())
-                    .filter(Boolean);
-
-                const linhasFiltradas = linhasBrutas.filter(linha => {
-                    if (/^(#|Medida|N\.?Fogo\/Dot|N\.?Fogo|Servico|Serviço|Marca|Modelo|Desenho)\b/i.test(linha)) return false;
-                    if (/^\d{3}\s+/i.test(linha)) return false;
-                    if (/\b\d{3,4}\/\d{2}R\d{2}(?:\.\d)?\b/i.test(linha)) return false;
-                    if (/\b\d{4}R\d{2}\b/i.test(linha)) return false;
-                    if (/\b(?:CONSERTO|RECAPE|TAP\s*RAP)\b/i.test(linha) && linha.length < 40) return false;
-                    return true;
-                });
-
-                const linhasFilial = (linhasFiltradas.length ? linhasFiltradas : linhasBrutas).slice(-5);
-                let filialTratada = linhasFilial.join('<br>');
-                filialTratada = filialTratada.replace(/(<br>\s*)+/g, '<br>');
+                let filialTratada = matchFilialOriginal[1].trim().replace(/\r?\n/g, '<br>');
+                filialTratada = filialTratada.replace(/(<br>\s*)+/g, '<br>'); // Remove Enter duplicado
                 dados.coleta.filial = filialTratada;
             }
 
@@ -1148,92 +767,149 @@
             // 2. PARSER AVANÇADO E BLINDADO DE PNEUS
             // ==========================================
 
-            // Isola SOMENTE a tabela correta de pneus.
-            // Alguns textos copiados podem trazer um pedaço da tabela ANTES do comprovante completo.
-            // Exemplo: itens 001/002 aparecem soltos e depois a tabela completa começa novamente.
+            // Isola SOMENTE a tabela de pneus.
+            // Isso é essencial porque números de sequência podem existir no cabeçalho.
+            // Exemplo real: "ROD MG 050 KM..." fazia o item 050 ser confundido com a rodovia.
             let tableText = textoVia1;
 
-            // Primeiro corta tudo após a quantidade total para limitar a área de busca.
+            // Guarda as posições reais das colunas antes de remover o cabeçalho.
+            // O relatório do ERP usa duas linhas por pneu:
+            //   # / Marca / Modelo / Desenho
+            //   Medida / N.Fogo-Dot / Serviço
+            const linhasVia1 = textoVia1.replace(/\r/g, '').split('\n');
+            const cabecalhoSuperior = linhasVia1.find(linha =>
+                /Marca/i.test(linha) && /Modelo/i.test(linha) && /Desenho/i.test(linha)
+            ) || '';
+            const cabecalhoInferior = linhasVia1.find(linha =>
+                /Medida/i.test(linha) && /Fogo/i.test(linha) && /Servi[cç]o/i.test(linha)
+            ) || '';
+
+            const posMarca = cabecalhoSuperior.search(/Marca/i);
+            const posModelo = cabecalhoSuperior.search(/Modelo/i);
+            const posDesenho = cabecalhoSuperior.search(/Desenho/i);
+            const posFogoDot = cabecalhoInferior.search(/N\.?\s*Fogo/i);
+            const posServico = cabecalhoInferior.search(/Servi[cç]o/i);
+            const possuiColunasFixas = [posMarca, posModelo, posDesenho, posFogoDot, posServico]
+                .every(posicao => posicao >= 0);
+
+            // Primeiro localiza o item 001 no INÍCIO de uma linha.
+            // A partir daqui, filial/endereço/CEP deixam de participar do parser dos pneus.
+            const matchInicioTabela = tableText.match(/^\s*001\s+/m);
+            if (matchInicioTabela) {
+                tableText = tableText.substring(matchInicioTabela.index);
+            }
+
+            // Encerra somente na frase específica de quantidade total.
             const matchFimPneus = tableText.match(/Quantidade\s+total\s+de\s+pneus\s*:/i);
             if (matchFimPneus) {
                 tableText = tableText.substring(0, matchFimPneus.index);
             }
 
-            // Preferência 1: usa a ÚLTIMA ocorrência do cabeçalho completo da tabela.
-            // Isso ignora fragmentos de linhas que possam ter sido copiados antes do comprovante.
-            const cabecalhosTabela = [...tableText.matchAll(/^\s*#?\s*Marca\s+Modelo\s+Desenho\s*$/gmi)];
-            if (cabecalhosTabela.length > 0) {
-                const ultimoCabecalho = cabecalhosTabela[cabecalhosTabela.length - 1];
-                const trechoAposCabecalho = tableText.substring(ultimoCabecalho.index + ultimoCabecalho[0].length);
-                const inicio001 = trechoAposCabecalho.match(/^\s*001\s+/m);
-                if (inicio001) {
-                    tableText = trechoAposCabecalho.substring(inicio001.index);
-                }
-            } else {
-                // Fallback: se não houver cabeçalho, usa a ÚLTIMA ocorrência do item 001.
-                // Isso também protege contra fragmentos duplicados no início do texto.
-                const inicios001 = [...tableText.matchAll(/^\s*001\s+/gm)];
-                if (inicios001.length > 0) {
-                    const ultimo001 = inicios001[inicios001.length - 1];
-                    tableText = tableText.substring(ultimo001.index);
-                }
-            }
+            const limparCampoTabela = valor => limparValor(
+                (valor || '')
+                    .replace(/\\\s*$/, '')
+                    .replace(/\s*[\(\)]+\s*$/, '')
+                    .trim()
+            );
+
+            const linhasTabela = tableText
+                .replace(/\r/g, '')
+                .split('\n')
+                .map(linha => linha.replace(/\\\s*$/, ''));
 
             let seq = 1;
 
             while (true) {
-                let seqStrAtual = seq.toString().padStart(3, '0');
-                let seqStrProx = (seq + 1).toString().padStart(3, '0');
-                
-                // Cada sequência precisa estar no INÍCIO de uma linha.
-                // Evita colisões com números presentes em endereço, rodovia, telefone etc.
-                let regexAtual = new RegExp(`(?:^|\\n)\\s*${seqStrAtual}\\s+([\\s\\S]*?)(?=\\n\\s*${seqStrProx}\\s+|$)`, 'i');
-                let matchPneu = tableText.match(regexAtual);
+                const seqStrAtual = seq.toString().padStart(3, '0');
+                const indiceLinhaSuperior = linhasTabela.findIndex(linha =>
+                    new RegExp(`^\\s*${seqStrAtual}\\s+`).test(linha)
+                );
 
-                if (!matchPneu) break; // Se quebrou a sequência, a tabela de fato acabou.
+                if (indiceLinhaSuperior < 0) break;
 
-                // Substitui quebras de linha por espaçamentos longos para forçar a separação por colunas
-                let flatBlock = matchPneu[1].replace(/\r?\n/g, '   ');
-                
-                // Quebra utilizando grandes vazios gerados pelo ERP (2 ou mais espaços, ou tabs)
-                let tokens = flatBlock.split(/ {2,}|\t/).map(t => t.trim()).filter(t => t.length > 0);
-                
-                // Se a cópia foi malfeita (sem espaços grandes), usa o plano B: separa por qualquer espaço.
-                if(tokens.length < 5) {
-                    tokens = flatBlock.split(/\s+/).map(t => t.trim()).filter(t => t.length > 0);
+                const linhaSuperior = linhasTabela[indiceLinhaSuperior];
+                const proximaLinha = linhasTabela.slice(indiceLinhaSuperior + 1)
+                    .find(linha => linha.trim()) || '';
+                const linhaInferior = /^\s*\d{3}\s+/.test(proximaLinha) ? '' : proximaLinha;
+
+                let marca = '—';
+                let desenho = '—';
+                let medida = '—';
+                let fogoDot = '—';
+                let servico = '—';
+
+                if (possuiColunasFixas && linhaInferior) {
+                    // No cabeçalho superior, "# " ocupa duas posições; nos dados,
+                    // o item usa "001 ". Por isso, as três colunas começam 2 casas depois.
+                    const ajusteItem = 2;
+                    const inicioMarca = posMarca + ajusteItem;
+                    const inicioModelo = posModelo + ajusteItem;
+                    const inicioDesenho = posDesenho + ajusteItem;
+
+                    marca = limparCampoTabela(linhaSuperior.slice(inicioMarca, inicioModelo));
+                    // O modelo é lido para manter os limites corretos, mas não é exibido.
+                    const modelo = limparCampoTabela(linhaSuperior.slice(inicioModelo, inicioDesenho));
+                    desenho = limparCampoTabela(linhaSuperior.slice(inicioDesenho));
+
+                    medida = limparCampoTabela(linhaInferior.slice(0, posFogoDot));
+                    fogoDot = limparCampoTabela(linhaInferior.slice(posFogoDot, posServico));
+                    servico = limparCampoTabela(linhaInferior.slice(posServico));
+                } else {
+                    // Compatibilidade com textos sem o espaçamento original do ERP.
+                    const superiores = linhaSuperior
+                        .replace(/^\s*\d{3}\s+/, '')
+                        .split(/\s{2,}|\t+/)
+                        .map(limparCampoTabela)
+                        .filter(valor => valor !== '—');
+                    marca = superiores[0] || '—';
+                    desenho = superiores.slice(2).join(' ') || '—';
+
+                    const inferiores = linhaInferior
+                        .split(/\s{2,}|\t+/)
+                        .map(limparCampoTabela)
+                        .filter(valor => valor !== '—');
+                    medida = inferiores.shift() || '—';
+                    const restante = inferiores.join(' ');
+                    const matchServico = restante.match(/^(.*?)(RECAP(?:E|AGEM)|CONSERTO|VULCANIZA(?:CÃO|ÇÃO|CAO)|MONTAGEM|DESMONTAGEM|GARANTIA|DEVOLU(?:CÃO|ÇÃO|CAO)|SUCATA)\b(.*)$/i);
+                    if (matchServico) {
+                        fogoDot = limparCampoTabela(matchServico[1]);
+                        servico = limparCampoTabela(matchServico[2] + matchServico[3]);
+                    } else {
+                        fogoDot = limparCampoTabela(restante);
+                    }
                 }
 
-                // Remove caracteres "lixo" como "(" que sobram de RECAPE(
-                // e FILTRA NOVAMENTE os vazios. Sem este segundo filtro, o "("
-                // virava uma string vazia no fim e deslocava Serviço/Fogo/Medida.
-                tokens = tokens
-                    .map(t => t.replace(/^[\(\)]+|[\(\)]+$/g, '').trim())
-                    .filter(t => t.length > 0);
-
-                if (tokens.length >= 4) {
-                    // Lê o pneu de TRÁS para FRENTE, porque Serviço, Fogo e Medida sempre estão garantidos no fim
-                    let servico = tokens.pop() || '—'; 
-                    let fogoDot = tokens.pop() || '—'; 
-                    let medida = tokens.pop() || '—';  
-                    
-                    // As primeiras palavras do início são a Marca.
-                    let marca = tokens.shift() || '—'; 
-                    
-                    // Descarta o "Modelo" que sobra, conforme você solicitou.
-                    let modelo = tokens.shift() || '—'; 
-                    
-                    // Tudo que porventura sobrou imprensado no meio se torna o "Desenho"
-                    let desenho = tokens.length > 0 ? tokens.join(' ') : '—'; 
-
-                    dados.pneus.push({
-                        item: seqStrAtual,
-                        marca: marca,
-                        desenho: desenho,
-                        medida: medida,
-                        fogoDot: fogoDot,
-                        servico: servico
-                    });
+                // As posições do cabeçalho podem mudar ao copiar. Prefere os
+                // campos da própria linha, sem cortar palavras por índice.
+                const superiorSemItem = linhaSuperior.replace(/^\s*\d{3}\s+/, '').trim();
+                let camposSuperiores = superiorSemItem.split(/\s{2,}|\t+/);
+                if (camposSuperiores.length < 3) {
+                    camposSuperiores = superiorSemItem.split(/\s+/);
                 }
+                if (camposSuperiores.length >= 3) {
+                    marca = limparCampoTabela(camposSuperiores[0]);
+                    desenho = limparCampoTabela(camposSuperiores.slice(2).join(' '));
+                }
+
+                const detalhe = linhaInferior.trim().match(/^(\S+)\s+(.+)$/);
+                if (detalhe) {
+                    medida = limparCampoTabela(detalhe[1]);
+                    const partes = detalhe[2].match(/^(.*?)\b(RECAP(?:E|AGEM)|CONSERTO|VULCANIZA(?:ÇÃO|CAO)|MONTAGEM|DESMONTAGEM|GARANTIA|DEVOLU(?:ÇÃO|CAO)|SUCATA)\b(.*)$/i);
+                    if (partes) {
+                        fogoDot = limparCampoTabela(partes[1]);
+                        servico = limparCampoTabela(partes[2] + partes[3]);
+                    }
+                }
+
+                dados.pneus.push({
+                    item: seqStrAtual,
+                    marca,
+                    desenho,
+                    medida,
+                    fogoDot,
+                    servico
+                });
+
                 seq++;
             }
 
@@ -1356,11 +1032,12 @@
                 <div class="obs-box"></div>
 
                 <div class="assinaturas">
-                    <div class="assinatura-box" id="assinatura-preview-cliente"></div>
-                    <div class="assinatura-box" id="assinatura-preview-coletor"></div>
+                    <div class="assinatura-box">
+                        <div class="linha-assinatura"></div>
+                        Visto do Cliente
+                    </div>
                 </div>
             `;
-            aplicarAssinaturasNoDocumento();
         }
 
         function exibirFeedback(dados) {
