@@ -161,7 +161,7 @@
 <body>
 
     <div id="app-container">
-        <div style="text-align:right;font-size:11px;color:#888;margin-bottom:4px;">Versão 6.2</div>
+        <div style="text-align:right;font-size:11px;color:#888;margin-bottom:4px;">Versão 6.3</div>
         <h1>Gerador de Comprovante de Coleta</h1>
         <p class="instrucao">Cole abaixo o texto bruto do comprovante. O sistema extrai os dados, gera o PDF e permite compartilhar o comprovante pelo menu nativo do tablet.</p>
         <div id="pwa-status"></div>
@@ -839,18 +839,6 @@
                 let servico = '—';
 
                 if (possuiColunasFixas && linhaInferior) {
-                    // No cabeçalho superior, "# " ocupa duas posições; nos dados,
-                    // o item usa "001 ". Por isso, as três colunas começam 2 casas depois.
-                    const ajusteItem = 2;
-                    const inicioMarca = posMarca + ajusteItem;
-                    const inicioModelo = posModelo + ajusteItem;
-                    const inicioDesenho = posDesenho + ajusteItem;
-
-                    marca = limparCampoTabela(linhaSuperior.slice(inicioMarca, inicioModelo));
-                    // O modelo é lido para manter os limites corretos, mas não é exibido.
-                    const modelo = limparCampoTabela(linhaSuperior.slice(inicioModelo, inicioDesenho));
-                    desenho = limparCampoTabela(linhaSuperior.slice(inicioDesenho));
-
                     medida = limparCampoTabela(linhaInferior.slice(0, posFogoDot));
                     fogoDot = limparCampoTabela(linhaInferior.slice(posFogoDot, posServico));
                     servico = limparCampoTabela(linhaInferior.slice(posServico));
@@ -883,10 +871,12 @@
                 // campos da própria linha, sem cortar palavras por índice.
                 const superiorSemItem = linhaSuperior.replace(/^\s*\d{3}\s+/, '').trim();
                 let camposSuperiores = superiorSemItem.split(/\s{2,}|\t+/);
-                if (camposSuperiores.length < 3) {
+                if (camposSuperiores.length < 2) {
                     camposSuperiores = superiorSemItem.split(/\s+/);
                 }
-                if (camposSuperiores.length >= 3) {
+                // Marca e modelo existem mesmo quando o desenho não foi informado.
+                // Nesse caso, mantém a marca inteira e exibe desenho vazio (—).
+                if (camposSuperiores.length >= 2) {
                     marca = limparCampoTabela(camposSuperiores[0]);
                     desenho = limparCampoTabela(camposSuperiores.slice(2).join(' '));
                 }
